@@ -89,6 +89,18 @@ describe('income, collect & buildings (e2e)', () => {
     await ledgerMatches(p.id);
   });
 
+  it('rarer land: buildings cost more and earn more', async () => {
+    const p = await playerWithPlot('epic');
+    const plot = (await http().get(`/plots/${p.key}`).set(p.auth)).body;
+    // epic: house costs 500 × 1.8 = 900 and earns 48 × 2.3 ≈ 110 on top of 192
+    expect(plot.buildings[1]).toEqual({ cost: 900, income: 110 });
+    expect(plot.nextLevel).toEqual({ level: 1, cost: 900, incomePerDay: 192 + 110 });
+    const res = await http().post(`/plots/${p.key}/upgrade`).set(p.auth).expect(200);
+    expect(res.body.wallet.coins).toBe(1000 - 900);
+    expect(res.body.plot.incomePerDay).toBe(302);
+    await ledgerMatches(p.id);
+  });
+
   it("can't upgrade without coins, past the tower, or someone else's plot", async () => {
     const p = await playerWithPlot();
     await prisma.plot.update({ where: { row_col: { row: p.row, col: p.col } }, data: { buildingLevel: 1 } });

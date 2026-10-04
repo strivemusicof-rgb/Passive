@@ -4,7 +4,7 @@ import { cellAt, cellCenter, cellKey, cellsInBox, neighbours, type Cell, type Ce
 
 import { EconomyService, type Economy } from '../economy/economy.service.js';
 import { plotIncomePerDay } from '../economy/income.js';
-import { hotspotBoost, plotPrice, plotValue, priceRange, rarityOdds, rollRarity } from '../economy/rarity.js';
+import { buildingCost, buildingIncome, hotspotBoost, plotPrice, plotValue, priceRange, rarityOdds, rollRarity } from '../economy/rarity.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { IncomeService, ownedNeighbours } from '../income/income.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -110,7 +110,7 @@ export class PlotsService {
       if (next >= economy.buildingCost.length) throw new BadRequestException({ code: 'max_level' });
       // Collect at the old rate first, so the new building never earns for the past.
       await this.income.collect(tx, userId);
-      let wallet = await this.wallet.change(tx, userId, 'coins', -economy.buildingCost[next], 'building_upgrade', cellKey(cell));
+      let wallet = await this.wallet.change(tx, userId, 'coins', -buildingCost(plot.rarity as Rarity, next, economy), 'building_upgrade', cellKey(cell));
       const updated = await tx.plot.update({ where: { row_col: cell }, data: { buildingLevel: next }, include: withOwner });
       await this.tracker.track(tx, userId, 'upgrade');
       const level = await this.tracker.addXp(tx, userId, economy.xpFor.upgrade);
@@ -216,13 +216,16 @@ export class PlotsService {
         mine && next < economy.buildingCost.length
           ? {
               level: next,
-              cost: economy.buildingCost[next],
+              cost: buildingCost(rarity, next, economy),
               incomePerDay: plotIncomePerDay({ rarity, buildingLevel: next, neighbours: neighbourCount }, economy),
             }
           : null,
       price: null,
       name: p.name,
       listing: p.listings[0] ?? null,
+      buildings: mine
+        ? economy.buildingCost.map((_, level) => ({ cost: buildingCost(rarity, level, economy), income: buildingIncome(rarity, level, economy) }))
+        : null,
       sale: mine ? { value: plotValue(rarity, p.buildingLevel, economy), ...priceRange(plotValue(rarity, p.buildingLevel, economy), economy), feeRate: economy.market.feeRate } : null,
     };
   }
@@ -249,6 +252,7 @@ export class PlotsService {
       name: null,
       listing: null,
       sale: null,
+      buildings: null,
     };
   }
 }

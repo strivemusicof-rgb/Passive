@@ -24,6 +24,17 @@ export const ECONOMY_DEFAULTS = {
   buildingIncome: [0, 48, 168, 480, 1440],
   /** Coins to build/upgrade TO each level (index 1 = house). Each pays back in ~10–28 days. */
   buildingCost: [0, 500, 2500, 10000, 40000],
+  /**
+   * Rarer land gets more from its buildings, and building there costs more.
+   * Income grows faster than cost, so rare land pays back sooner.
+   */
+  buildingRarity: {
+    common: { income: 1, cost: 1 },
+    uncommon: { income: 1.3, cost: 1.2 },
+    rare: { income: 1.7, cost: 1.45 },
+    epic: { income: 2.3, cost: 1.8 },
+    legendary: { income: 3.2, cost: 2.3 },
+  } as Record<Rarity, { income: number; cost: number }>,
   /** Income bonus for each of the 8 surrounding plots you also own (0.05 = +5%, max +40%). */
   neighbourBonus: 0.05,
   /** Hours a plot keeps earning before it must be collected, by storage level. */

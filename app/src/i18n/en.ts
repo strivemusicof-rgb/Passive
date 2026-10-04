@@ -143,6 +143,7 @@ const en = {
     cancelled: 'Listing cancelled.',
   },
   build: {
+    rarityHint: 'On {{rarity}} land, buildings earn more and cost more.',
     choosePlot: 'Choose a plot to build on',
     allPlots: 'All plots',
     maxLevel: 'Max level',

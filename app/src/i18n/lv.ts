@@ -145,6 +145,7 @@ const lv: Translations = {
     cancelled: 'Sludinājums atcelts.',
   },
   build: {
+    rarityHint: 'Retums: {{rarity}}. Ēkas te pelna vairāk un maksā vairāk.',
     choosePlot: 'Izvēlies gabalu būvniecībai',
     allPlots: 'Visi gabali',
     maxLevel: 'Maks. līmenis',

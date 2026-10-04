@@ -46,8 +46,8 @@ describe('leaderboard (e2e)', () => {
     const order = all.entries.map((e: { userId: string }) => e.userId);
     expect(order.indexOf(rich.id)).toBeLessThan(order.indexOf(far.id));
     expect(order.indexOf(far.id)).toBeLessThan(order.indexOf(mid.id));
-    // legendary 360 + office 168 = 528/day = 22/h
-    expect(all.entries.find((e: { userId: string }) => e.userId === rich.id)).toMatchObject({ plots: 1, incomePerHour: 22, displayName: rich.name });
+    // legendary 360 + office 168 × 3.2 (legendary buildings) = 898/day ≈ 37.4/h
+    expect(all.entries.find((e: { userId: string }) => e.userId === rich.id)).toMatchObject({ plots: 1, incomePerHour: 37.4, displayName: rich.name });
     expect(all.me.userId).toBe(mid.id);
     expect(all.monthlyPrizeGems[0]).toBe(100);
 

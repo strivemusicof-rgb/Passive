@@ -145,6 +145,7 @@ const ru: Translations = {
     cancelled: 'Объявление снято.',
   },
   build: {
+    rarityHint: 'Редкость: {{rarity}}. Здания здесь приносят больше и стоят дороже.',
     choosePlot: 'Выберите участок для стройки',
     allPlots: 'Все участки',
     maxLevel: 'Макс. уровень',

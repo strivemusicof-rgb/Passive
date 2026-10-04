@@ -59,8 +59,20 @@ export function plotPrice(ownedCount: number, economy: Pick<Economy, 'plotBasePr
   return Math.round(economy.plotBasePrice * (1 + economy.plotPriceGrowth * ownedCount));
 }
 
-export function plotIncome(rarity: Rarity, buildingLevel: number, economy: Pick<Economy, 'rarityIncome' | 'buildingIncome'>) {
-  return economy.rarityIncome[rarity] + (economy.buildingIncome[buildingLevel] ?? 0);
+type BuildingEconomy = Pick<Economy, 'buildingIncome' | 'buildingCost' | 'buildingRarity'>;
+
+/** Extra coins/day a building of `level` gives on land of this rarity. */
+export function buildingIncome(rarity: Rarity, level: number, economy: BuildingEconomy): number {
+  return Math.round((economy.buildingIncome[level] ?? 0) * (economy.buildingRarity[rarity]?.income ?? 1));
+}
+
+/** Coins to build/upgrade to `level` on land of this rarity (rounded to 10). */
+export function buildingCost(rarity: Rarity, level: number, economy: BuildingEconomy): number {
+  return Math.round(((economy.buildingCost[level] ?? 0) * (economy.buildingRarity[rarity]?.cost ?? 1)) / 10) * 10;
+}
+
+export function plotIncome(rarity: Rarity, buildingLevel: number, economy: Pick<Economy, 'rarityIncome'> & BuildingEconomy) {
+  return economy.rarityIncome[rarity] + buildingIncome(rarity, buildingLevel, economy);
 }
 
 /**
@@ -70,10 +82,10 @@ export function plotIncome(rarity: Rarity, buildingLevel: number, economy: Pick<
 export function plotValue(
   rarity: Rarity,
   buildingLevel: number,
-  economy: Pick<Economy, 'rarityIncome' | 'buildingCost'>,
+  economy: Pick<Economy, 'rarityIncome'> & BuildingEconomy,
 ): number {
   let value = economy.rarityIncome[rarity] * 3;
-  for (let level = 1; level <= buildingLevel; level++) value += economy.buildingCost[level] ?? 0;
+  for (let level = 1; level <= buildingLevel; level++) value += buildingCost(rarity, level, economy);
   return value;
 }
 

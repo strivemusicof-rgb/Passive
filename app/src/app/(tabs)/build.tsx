@@ -85,8 +85,9 @@ function Catalogue({ plot }: { plot: PlotDto }) {
   const { wallet, income } = useGame();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const costs = income?.buildingCost ?? [];
-  const bonuses = income?.buildingIncome ?? [];
+  // This plot's own prices (rarer land: buildings earn more and cost more).
+  const costs = plot.buildings?.map((b) => b.cost) ?? income?.buildingCost ?? [];
+  const bonuses = plot.buildings?.map((b) => b.income) ?? income?.buildingIncome ?? [];
 
   const upgrade = async () => {
     setBusy(true);
@@ -125,6 +126,11 @@ function Catalogue({ plot }: { plot: PlotDto }) {
         </View>
         <RarityBadge rarity={plot.rarity} size="md" />
       </Card>
+      {plot.rarity && plot.rarity !== 'common' && (
+        <Text variant="small" color={C.textSecondary}>
+          {t('build.rarityHint', { rarity: t(`rarity.${plot.rarity}`) })}
+        </Text>
+      )}
 
       {BUILDING_BY_LEVEL.map((kind, level) => {
         const current = level === plot.buildingLevel;

@@ -89,6 +89,8 @@ export interface PlotDto {
   name: string | null;
   /** On sale on the marketplace (owned plots only). */
   listing: { id: string; price: number } | null;
+  /** Your own plots: cost and extra income/day of each building level on this land (index = level; rarer land = more of both). */
+  buildings: { cost: number; income: number }[] | null;
   /** Your own plots: what it's worth and the allowed listing price range. */
   sale: { value: number; min: number; max: number; feeRate: number } | null;
 }
@@ -118,7 +120,7 @@ export interface IncomeDto {
   /** Server time of this snapshot, for client-side counting between refreshes. */
   serverTime: string;
   nextStorage: { level: number; hours: number; cost: number } | null;
-  /** Price list for the building screen (index = level). */
+  /** Base price list for common land (index = level); see PlotDto.buildings for a plot's own prices. */
   buildingCost: number[];
   buildingIncome: number[];
 }
