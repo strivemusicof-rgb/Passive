@@ -9,7 +9,12 @@ import { C, TAB_BAR_HEIGHT } from '@/constants/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-export const TABS: { name: string; label: 'map' | 'lands' | 'build' | 'shop' | 'more'; icon: IconName; iconActive: IconName }[] = [
+export const TABS: {
+  name: string;
+  label: 'map' | 'lands' | 'build' | 'shop' | 'more';
+  icon: IconName;
+  iconActive: IconName;
+}[] = [
   { name: 'map', label: 'map', icon: 'map-outline', iconActive: 'map' },
   { name: 'lands', label: 'lands', icon: 'home-outline', iconActive: 'home' },
   { name: 'build', label: 'build', icon: 'construct-outline', iconActive: 'construct' },
@@ -28,6 +33,7 @@ const PARENT: Record<string, string> = {
   rewards: 'more',
 };
 
+/** Rounded bottom bar with dividers and a green underline on the active tab. */
 export function TabBar({ state, navigation }: BottomTabBarProps) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -35,17 +41,33 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
   const activeTab = PARENT[routeName] ?? routeName;
 
   return (
-    <View style={[styles.bar, { paddingBottom: insets.bottom, height: TAB_BAR_HEIGHT + insets.bottom }]}>
-      {TABS.map((tab) => {
+    <View
+      style={[
+        styles.bar,
+        { paddingBottom: insets.bottom, height: TAB_BAR_HEIGHT + insets.bottom },
+      ]}>
+      {TABS.map((tab, i) => {
         const active = tab.name === activeTab;
         const color = active ? C.green : C.textSecondary;
         return (
-          <Pressable key={tab.name} style={styles.item} onPress={() => navigation.navigate(tab.name)}>
-            <Ionicons name={active ? tab.iconActive : tab.icon} size={22} color={color} />
-            <Text variant="tiny" color={color} numberOfLines={1}>
-              {t(`tabs.${tab.label}`)}
-            </Text>
-          </Pressable>
+          <View key={tab.name} style={styles.cell}>
+            {i > 0 && <View style={styles.divider} />}
+            <Pressable
+              style={styles.item}
+              onPress={() => navigation.navigate(tab.name)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}>
+              <Ionicons name={active ? tab.iconActive : tab.icon} size={24} color={color} />
+              <Text
+                variant="small"
+                color={color}
+                numberOfLines={1}
+                style={active && styles.activeLabel}>
+                {t(`tabs.${tab.label}`)}
+              </Text>
+              <View style={[styles.underline, active && styles.underlineOn]} />
+            </Pressable>
+          </View>
         );
       })}
     </View>
@@ -60,8 +82,29 @@ const styles = StyleSheet.create({
     bottom: 0,
     flexDirection: 'row',
     backgroundColor: '#0A100E',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#22302A',
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    borderTopWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    shadowColor: '#000',
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -2 },
   },
-  item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3 },
+  cell: { flex: 1, flexDirection: 'row' },
+  divider: {
+    width: StyleSheet.hairlineWidth,
+    marginVertical: 16,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2, paddingTop: 6 },
+  activeLabel: { fontWeight: '700' },
+  underline: {
+    height: 3,
+    width: 28,
+    borderRadius: 2,
+    marginTop: 3,
+    backgroundColor: 'transparent',
+  },
+  underlineOn: { backgroundColor: C.green },
 });

@@ -2,14 +2,22 @@
 // the plot squares, so flows can be tested in a browser. Tapping works; the
 // view can't be dragged. The iPhone app uses game-map.tsx (Apple Maps).
 import { cellBounds } from '@landrush/shared/grid';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 
 import { RARITY_COLORS } from '@/constants/theme';
+import { BUILDING_ICONS } from '@/lib/plot-shape';
 
-import type { GameMapHandle, GameMapProps, LatLng, MapCell } from './game-map';
+import {
+  type GameMapHandle,
+  type GameMapProps,
+  type LatLng,
+  type MapCell,
+  type MapStyle,
+} from './game-map';
 
-export type { GameMapHandle, LatLng, MapCell };
+export type { GameMapHandle, LatLng, MapCell, MapStyle };
 
 const C_FREE = '#FFFFFF';
 const C_LANDMARK = '#F6C453';
@@ -18,7 +26,7 @@ const C_LANDMARK = '#F6C453';
 const PX_PER_DEG = 120000;
 
 export const GameMap = forwardRef<GameMapHandle, GameMapProps>(function GameMap(
-  { cells, selectedKey, initialCenter, onRegionChange, onPress },
+  { cells, selectedKey, initialCenter, mapStyle, onRegionChange, onPress },
   ref,
 ) {
   const [center, setCenter] = useState(initialCenter);
@@ -62,7 +70,7 @@ export const GameMap = forwardRef<GameMapHandle, GameMapProps>(function GameMap(
 
   return (
     <Pressable
-      style={[StyleSheet.absoluteFill, styles.bg]}
+      style={[StyleSheet.absoluteFill, mapStyle === 'satellite' ? styles.sat : styles.bg]}
       onPress={(e) => {
         // react-native-web gives page coordinates; the map is laid out from (x, y).
         const locationX = e.nativeEvent.pageX - size.x;
@@ -76,13 +84,9 @@ export const GameMap = forwardRef<GameMapHandle, GameMapProps>(function GameMap(
         const b = cellBounds(c);
         const tl = toPx(b.north, b.west);
         const br = toPx(b.south, b.east);
-        // Owned: rarity colour. Free: thin white outline, faint gold fill near landmarks.
+        const w = br.x - tl.x;
+        const gap = w * 0.06;
         const color = c.rarity ? RARITY_COLORS[c.rarity].map : C_FREE;
-        const fill = c.owned
-          ? `${color}${c.mine ? 'AA' : '66'}`
-          : c.boosted
-            ? `${C_LANDMARK}26`
-            : `${C_FREE}0D`;
         const selected = c.key === selectedKey;
         return (
           <View
@@ -100,19 +104,45 @@ export const GameMap = forwardRef<GameMapHandle, GameMapProps>(function GameMap(
             } as object)}
             style={{
               position: 'absolute',
-              left: tl.x,
-              top: tl.y,
-              width: br.x - tl.x - 1,
-              height: br.y - tl.y - 1,
-              backgroundColor: fill,
-              borderColor: selected ? '#FFFFFF' : `${color}${c.owned ? 'FF' : '40'}`,
-              borderWidth: selected ? 2 : c.owned ? 1.5 : 0.5,
-            }}
-          />
+              left: tl.x + gap,
+              top: tl.y + gap,
+              width: w - 2 * gap,
+              height: br.y - tl.y - 2 * gap,
+              borderRadius: w * 0.2,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: c.owned
+                ? `${color}${c.mine ? '66' : '40'}`
+                : c.boosted
+                  ? `${C_LANDMARK}22`
+                  : `${C_FREE}0A`,
+              borderColor: selected ? '#FFFFFF' : c.owned ? color : `${C_FREE}38`,
+              borderWidth: selected ? 2.5 : c.owned ? 2 : 0.8,
+              ...(c.owned ? { boxShadow: `0 0 ${c.mine ? 14 : 8}px ${color}` } : null),
+            }}>
+            {c.owned && (
+              <MaterialCommunityIcons
+                name={BUILDING_ICONS[c.buildingLevel] ?? 'pine-tree'}
+                size={w * 0.45}
+                color="rgba(255,255,255,0.9)"
+              />
+            )}
+            {selected && (
+              <Ionicons
+                name="location"
+                size={30}
+                color="#2F7CF6"
+                style={{ position: 'absolute', top: -18 }}
+              />
+            )}
+          </View>
         );
       })}
     </Pressable>
   );
 });
 
-const styles = StyleSheet.create({ bg: { backgroundColor: '#1F2A22', overflow: 'hidden' } });
+const styles = StyleSheet.create({
+  bg: { backgroundColor: '#1B2026', overflow: 'hidden' },
+  sat: { backgroundColor: '#2B3326', overflow: 'hidden' },
+});

@@ -59,6 +59,7 @@ const en = {
     s4Body: 'Sell plots on the Marketplace\nand buy land from other players.',
   },
   map: {
+    style: 'Map style',
     zoomIn: 'Zoom in to see free plots',
     myLocation: 'My location',
     collect: 'Collect',

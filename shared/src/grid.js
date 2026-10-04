@@ -1,6 +1,7 @@
-// Square land grid. Each plot is ~33 m × ~33 m. Rows are fixed latitude bands;
-// the longitude width of a cell depends on its row so plots stay roughly square
-// at any latitude.
+// Square land grid. Each plot is ~33 m × ~33 m. Rows are fixed latitude bands.
+// Cells get wider in degrees of longitude towards the poles so they stay
+// roughly square in metres. The width is the same for a whole zone of rows
+// (~100 km tall), so columns line up into a neat grid inside a zone.
 //
 // Plain JavaScript (types in grid.d.ts) so the server can run it directly with
 // Node and the app can bundle it with Metro, with no build step.
@@ -10,8 +11,12 @@ export const CELL_LAT = 0.0003;
 
 const EARTH_RADIUS_M = 6371000;
 
+/** Rows per zone (0.9° of latitude). Riga, Jūrmala and Vilnius sit inside one zone each. */
+export const ZONE_ROWS = 3000;
+
 function lngStep(row) {
-  const centerLat = (row + 0.5) * CELL_LAT;
+  const zone = Math.floor(row / ZONE_ROWS);
+  const centerLat = (zone + 0.5) * ZONE_ROWS * CELL_LAT;
   // Clamp near the poles so cells never become absurdly wide.
   const cos = Math.max(Math.cos((centerLat * Math.PI) / 180), 0.05);
   return CELL_LAT / cos;

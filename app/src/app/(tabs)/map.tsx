@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CollectCard } from '@/components/collect-card';
 import { DailyPopup } from '@/components/daily-popup';
-import { GameMap, type GameMapHandle, type MapCell } from '@/components/game-map';
+import { GameMap, type GameMapHandle, type MapCell, type MapStyle } from '@/components/game-map';
 import { Avatar } from '@/components/ui/avatar';
 import { Amount } from '@/components/ui/currency';
 import { Progress } from '@/components/ui/progress';
@@ -19,6 +19,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { useGame } from '@/lib/game';
 import { currentPosition, DEFAULT_POSITION } from '@/lib/location';
+import { prefs } from '@/lib/prefs';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -35,6 +36,7 @@ const toCell = (p: PlotDto): MapCell => ({
   boosted: p.boosted,
   mine: p.mine,
   owned: !!p.owner,
+  buildingLevel: p.buildingLevel,
 });
 
 /** 4. Home / map. */
@@ -43,16 +45,35 @@ export default function MapRoute() {
   const insets = useSafeAreaInsets();
   const map = useRef<GameMapHandle>(null);
   const { user } = useAuth();
-  const { wallet, myPlots, version } = useGame();
+  const { wallet, myPlots, missions, daily, version } = useGame();
   const [bounds, setBounds] = useState<CellBounds | null>(null);
   const [owned, setOwned] = useState<PlotDto[]>([]);
   const [free, setFree] = useState<PlotDto[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
+  const [mapStyle, setMapStyle] = useState<MapStyle>('dark');
 
   // Start where the player's newest plot is (or Riga).
   const [initialCenter] = useState(() =>
     myPlots?.[0] ? { lat: myPlots[0].lat, lng: myPlots[0].lng } : DEFAULT_POSITION,
   );
+
+  // Plots often arrive after the map is shown: jump to them once.
+  const centred = useRef(!!myPlots?.[0]);
+  useEffect(() => {
+    if (centred.current || !myPlots?.[0]) return;
+    centred.current = true;
+    map.current?.moveTo({ lat: myPlots[0].lat, lng: myPlots[0].lng });
+  }, [myPlots]);
+
+  useEffect(() => {
+    prefs.get('mapStyle').then((v) => v === 'satellite' && setMapStyle('satellite'));
+  }, []);
+
+  const toggleStyle = () => {
+    const next = mapStyle === 'dark' ? 'satellite' : 'dark';
+    setMapStyle(next);
+    prefs.set('mapStyle', next);
+  };
 
   // Load plots for the visible area (and again after buying something).
   useEffect(() => {
@@ -76,6 +97,13 @@ export default function MapRoute() {
 
   const cells = useMemo(() => [...free.map(toCell), ...owned.map(toCell)], [free, owned]);
 
+  // Red dot on Missions when a reward is waiting.
+  const missionWaiting =
+    (daily && !daily.claimedToday) ||
+    [...(missions?.daily ?? []), ...(missions?.weekly ?? [])].some(
+      (m) => !m.claimed && m.progress >= m.target,
+    );
+
   const openCell = (lat: number, lng: number) => {
     const key = cellKey(cellAt(lat, lng));
     setSelected(key);
@@ -87,6 +115,8 @@ export default function MapRoute() {
     if (pos) map.current?.moveTo(pos);
   };
 
+  const bottom = TAB_BAR_HEIGHT + insets.bottom + 28;
+
   return (
     <View style={styles.root}>
       <GameMap
@@ -94,22 +124,25 @@ export default function MapRoute() {
         cells={cells}
         selectedKey={selected}
         initialCenter={initialCenter}
+        mapStyle={mapStyle}
         onRegionChange={setBounds}
         onPress={({ lat, lng }) => openCell(lat, lng)}
       />
 
-      {/* Top bar: level, coins, gems, ⭐ (tap ⭐ for Rewards) */}
-      <View style={[styles.topBar, { paddingTop: insets.top + S.xs }]}>
-        <Pressable style={styles.level} onPress={() => router.push('/profile')}>
-          <Avatar name={user?.displayName ?? '?'} size={38} ring={C.green} />
+      {/* Floating panels: level (left) and balances (right). Tap ⭐ for Rewards. */}
+      <View style={[styles.topRow, { top: insets.top + S.xs }]} pointerEvents="box-none">
+        <Pressable style={[styles.pill, styles.levelPill]} onPress={() => router.push('/profile')}>
+          <Avatar name={user?.displayName ?? '?'} size={40} ring={C.green} />
           <View style={styles.levelText}>
-            <Text variant="smallBold">{t('common.lv', { level: user?.level ?? 1 })}</Text>
-            <Progress value={user ? user.levelXp.current / user.levelXp.needed : 0} height={4} />
+            <Text variant="bodyBold">{t('common.lv', { level: user?.level ?? 1 })}</Text>
+            <Progress value={user ? user.levelXp.current / user.levelXp.needed : 0} height={6} />
           </View>
         </Pressable>
-        <View style={styles.balances}>
-          <Amount value={wallet?.coins ?? '–'} variant="bodyBold" iconSize={18} />
-          <Amount value={wallet?.gems ?? '–'} icon="gem" variant="bodyBold" iconSize={16} />
+        <View style={[styles.pill, styles.balances]}>
+          <Amount value={wallet?.coins ?? '–'} variant="bodyBold" iconSize={20} />
+          <View style={styles.sep} />
+          <Amount value={wallet?.gems ?? '–'} icon="gem" variant="bodyBold" iconSize={17} />
+          <View style={styles.sep} />
           <Pressable
             onPress={() => router.push('/rewards')}
             hitSlop={8}
@@ -118,7 +151,7 @@ export default function MapRoute() {
               value={wallet?.points ?? '–'}
               icon="points"
               variant="bodyBold"
-              iconSize={18}
+              iconSize={19}
               color={C.coin}
             />
           </Pressable>
@@ -128,10 +161,10 @@ export default function MapRoute() {
       <DailyPopup />
 
       {/* Income + collect */}
-      <CollectCard style={[styles.collect, { top: insets.top + 64 }]} />
+      <CollectCard style={[styles.collect, { top: insets.top + 70 }]} />
 
       {free.length === 0 && owned.length === 0 && bounds && (
-        <View style={[styles.hint, { top: insets.top + 150 }]}>
+        <View style={[styles.hint, { top: insets.top + 175 }]}>
           <Text variant="small" center>
             {t('map.zoomIn')}
           </Text>
@@ -139,10 +172,11 @@ export default function MapRoute() {
       )}
 
       {/* Right-side shortcuts */}
-      <View style={[styles.side, { bottom: TAB_BAR_HEIGHT + insets.bottom + 36 }]}>
+      <View style={[styles.side, { bottom }]}>
         <SideButton
           icon="clipboard"
           label={t('map.missions')}
+          dot={!!missionWaiting}
           onPress={() => router.push('/missions')}
         />
         <SideButton
@@ -157,12 +191,15 @@ export default function MapRoute() {
         />
       </View>
 
-      <Pressable
-        style={[styles.locate, { bottom: TAB_BAR_HEIGHT + insets.bottom + 36 }]}
-        onPress={locate}
-        accessibilityLabel={t('map.myLocation')}>
-        <Ionicons name="locate" size={26} color={C.text} />
-      </Pressable>
+      {/* Left: map style + my location */}
+      <View style={[styles.leftCol, { bottom }]}>
+        <Pressable style={styles.round} onPress={toggleStyle} accessibilityLabel={t('map.style')}>
+          <Ionicons name={mapStyle === 'dark' ? 'earth' : 'moon'} size={24} color={C.text} />
+        </Pressable>
+        <Pressable style={styles.round} onPress={locate} accessibilityLabel={t('map.myLocation')}>
+          <Ionicons name="locate" size={26} color={C.text} />
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -170,40 +207,50 @@ export default function MapRoute() {
 function SideButton({
   icon,
   label,
+  dot,
   onPress,
 }: {
   icon: IconName;
   label: string;
+  dot?: boolean;
   onPress: () => void;
 }) {
   return (
     <Pressable style={styles.sideBtn} onPress={onPress}>
-      <Ionicons name={icon} size={24} color={C.text} />
+      <Ionicons name={icon} size={26} color={C.text} />
       <Text variant="tiny" style={styles.sideLabel}>
         {label}
       </Text>
+      {dot && <View style={styles.dot} />}
     </Pressable>
   );
 }
 
-const glass = { backgroundColor: 'rgba(10,16,14,0.88)', borderWidth: 1, borderColor: '#25332D' };
+const glass = {
+  backgroundColor: 'rgba(8,13,11,0.86)',
+  borderWidth: 1,
+  borderColor: 'rgba(255,255,255,0.10)',
+  shadowColor: '#000',
+  shadowOpacity: 0.45,
+  shadowRadius: 10,
+  shadowOffset: { width: 0, height: 4 },
+};
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
-  topBar: {
+  topRow: {
     position: 'absolute',
-    left: 0,
-    right: 0,
+    left: S.md,
+    right: S.md,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: S.md,
-    paddingBottom: S.sm,
-    backgroundColor: 'rgba(7,13,11,0.82)',
+    alignItems: 'center',
   },
-  level: { flexDirection: 'row', alignItems: 'center', gap: S.sm },
-  levelText: { width: 54, gap: 4 },
-  balances: { flexDirection: 'row', alignItems: 'center', gap: S.md },
+  pill: { flexDirection: 'row', alignItems: 'center', borderRadius: R.pill, ...glass },
+  levelPill: { gap: S.sm, paddingLeft: 4, paddingRight: S.lg, paddingVertical: 4 },
+  levelText: { width: 70, gap: 5 },
+  balances: { gap: S.md, paddingHorizontal: S.lg, height: 48 },
+  sep: { width: 1, height: 22, backgroundColor: 'rgba(255,255,255,0.15)' },
   collect: { position: 'absolute', alignSelf: 'center' },
   hint: {
     position: 'absolute',
@@ -215,21 +262,31 @@ const styles = StyleSheet.create({
   },
   side: { position: 'absolute', right: S.md, gap: S.md },
   sideBtn: {
-    width: 58,
-    height: 58,
-    borderRadius: R.md,
+    width: 66,
+    height: 66,
+    borderRadius: R.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
+    gap: 3,
     ...glass,
   },
-  sideLabel: { fontSize: 9 },
-  locate: {
+  sideLabel: { fontSize: 10 },
+  dot: {
     position: 'absolute',
-    left: S.md,
-    width: 52,
-    height: 52,
-    borderRadius: R.md,
+    top: 7,
+    right: 7,
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: C.green,
+    borderWidth: 1.5,
+    borderColor: '#0A100E',
+  },
+  leftCol: { position: 'absolute', left: S.md, gap: S.md },
+  round: {
+    width: 56,
+    height: 56,
+    borderRadius: R.lg,
     alignItems: 'center',
     justifyContent: 'center',
     ...glass,

@@ -46,4 +46,4 @@ export const R = {
   pill: 999,
 } as const;
 
-export const TAB_BAR_HEIGHT = 64;
+export const TAB_BAR_HEIGHT = 70;

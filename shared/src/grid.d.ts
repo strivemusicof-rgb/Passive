@@ -1,4 +1,5 @@
 export declare const CELL_LAT: number;
+export declare const ZONE_ROWS: number;
 
 export type Cell = { row: number; col: number };
 export type CellBounds = { south: number; north: number; west: number; east: number };

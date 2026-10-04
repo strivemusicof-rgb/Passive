@@ -61,6 +61,7 @@ const lv: Translations = {
     s4Body: 'Pārdod zemi tirgū\nun pērc zemi no citiem spēlētājiem.',
   },
   map: {
+    style: 'Kartes stils',
     zoomIn: 'Pietuvini, lai redzētu brīvos gabalus',
     myLocation: 'Mana atrašanās vieta',
     collect: 'Savākt',
