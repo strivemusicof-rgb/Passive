@@ -36,12 +36,8 @@
           "locationWhenInUsePermission": "LANDRUSH uses your location to give you a free starter plot where you are and to show plots near you."
         }
       ],
-      [
-        "expo-notifications",
-        {
-          "mode": "production"
-        }
-      ]
+      "./plugins/without-remote-push",
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,
