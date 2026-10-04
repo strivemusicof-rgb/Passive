@@ -1,10 +1,19 @@
-import { BadRequestException, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
-import type { BuyPlotResponse, MapPlotsResponse, PlotDto, WalletDto } from '@landrush/shared';
+import { BadRequestException, Controller, HttpCode, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import type {
+  BuyPlotResponse,
+  CollectResponse,
+  IncomeDto,
+  MapPlotsResponse,
+  PlotDto,
+  UpgradeResponse,
+  WalletDto,
+} from '@landrush/shared';
 import { parseCellKey, type Cell } from '@landrush/shared/grid';
 import { z } from 'zod';
 
 import { AuthGuard, UserId } from '../auth/auth.guard.js';
 import { ZodBody } from '../common/zod-body.js';
+import { IncomeService } from '../income/income.service.js';
 import { WalletService } from '../wallet/wallet.service.js';
 import { PlotsService } from './plots.service.js';
 
@@ -27,7 +36,25 @@ export class PlotsController {
   constructor(
     private readonly plots: PlotsService,
     private readonly wallet: WalletService,
+    private readonly income: IncomeService,
   ) {}
+
+  @Get('me/income')
+  getIncome(@UserId() userId: string): Promise<IncomeDto> {
+    return this.income.summary(userId);
+  }
+
+  @Post('collect')
+  @HttpCode(200)
+  collect(@UserId() userId: string): Promise<CollectResponse> {
+    return this.income.collectNow(userId);
+  }
+
+  @Post('me/storage/upgrade')
+  @HttpCode(200)
+  upgradeStorage(@UserId() userId: string): Promise<Omit<CollectResponse, 'collected'>> {
+    return this.income.upgradeStorage(userId);
+  }
 
   @Get('wallet')
   getWallet(@UserId() userId: string): Promise<WalletDto> {
@@ -59,6 +86,12 @@ export class PlotsController {
   @Post('plots/starter')
   starter(@UserId() userId: string, @ZodBody(StarterBody) body: z.infer<typeof StarterBody>): Promise<BuyPlotResponse> {
     return this.plots.claimStarter(userId, body.lat, body.lng);
+  }
+
+  @Post('plots/:key/upgrade')
+  @HttpCode(200)
+  upgrade(@UserId() userId: string, @Param('key') key: string): Promise<UpgradeResponse> {
+    return this.plots.upgrade(userId, cellParam(key));
   }
 
   @Post('plots/:key/buy')

@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "plots" ADD COLUMN     "collected_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN     "storage_level" INTEGER NOT NULL DEFAULT 0;

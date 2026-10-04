@@ -4,19 +4,19 @@ import { cellAt, cellKey, type CellBounds } from '@landrush/shared/grid';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CollectCard } from '@/components/collect-card';
 import { GameMap, type GameMapHandle, type MapCell } from '@/components/game-map';
 import { Avatar } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import { Amount } from '@/components/ui/currency';
 import { Progress } from '@/components/ui/progress';
 import { Text } from '@/components/ui/text';
 import { C, R, S, TAB_BAR_HEIGHT } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { incomePerHour, useGame } from '@/lib/game';
+import { useGame } from '@/lib/game';
 import { currentPosition, DEFAULT_POSITION } from '@/lib/location';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -115,18 +115,8 @@ export default function MapRoute() {
         </View>
       </View>
 
-      {/* Income + collect (collecting arrives in M3) */}
-      <View style={[styles.collect, { top: insets.top + 64 }]}>
-        <Text variant="h3" color={C.green} center>
-          + {incomePerHour(myPlots)} {t('common.coinsPerHour')}
-        </Text>
-        <Button
-          title={t('map.collect')}
-          size="sm"
-          style={styles.collectBtn}
-          onPress={() => Alert.alert(t('map.collect'), t('common.comingSoon'))}
-        />
-      </View>
+      {/* Income + collect */}
+      <CollectCard style={[styles.collect, { top: insets.top + 64 }]} />
 
       {free.length === 0 && owned.length === 0 && bounds && (
         <View style={[styles.hint, { top: insets.top + 150 }]}>
@@ -210,16 +200,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  collect: {
-    position: 'absolute',
-    alignSelf: 'center',
-    padding: S.md,
-    borderRadius: R.lg,
-    gap: S.sm,
-    minWidth: 190,
-    ...glass,
-  },
-  collectBtn: { alignSelf: 'stretch' },
+  collect: { position: 'absolute', alignSelf: 'center' },
   hint: {
     position: 'absolute',
     alignSelf: 'center',

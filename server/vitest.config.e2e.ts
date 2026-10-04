@@ -7,5 +7,7 @@ export default defineConfig({
     globals: true,
     root: './',
     include: ['**/*.e2e-spec.ts'],
+    // Each file wipes the shared test database first, so files must not overlap.
+    fileParallelism: false,
   },
 });

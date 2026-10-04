@@ -14,12 +14,12 @@ import { Screen } from '@/components/ui/screen';
 import { Segmented } from '@/components/ui/segmented';
 import { Text } from '@/components/ui/text';
 import { C, S } from '@/constants/theme';
-import { incomePerHour, useGame } from '@/lib/game';
+import { perHour, useGame } from '@/lib/game';
 
 /** 6. My lands. */
 export default function LandsRoute() {
   const { t } = useTranslation();
-  const { myPlots } = useGame();
+  const { myPlots, income } = useGame();
   const [filter, setFilter] = useState<'all' | Rarity>('all');
   const plots = (myPlots ?? []).filter((p) => filter === 'all' || p.rarity === filter);
   const options = [
@@ -37,7 +37,7 @@ export default function LandsRoute() {
             {t('lands.totalIncome')}
           </Text>
           <Amount
-            value={incomePerHour(myPlots)}
+            value={perHour(income?.perDay ?? 0)}
             suffix={` ${t('common.coinsPerHour')}`}
             variant="h3"
             color={C.coin}

@@ -67,7 +67,12 @@ export default function PlotRoute() {
 
   const footer = plot.mine ? (
     <>
-      <Button title={t('plot.upgrade')} onPress={() => router.push('/build')} />
+      {plot.nextLevel && (
+        <Button
+          title={t('plot.upgrade')}
+          onPress={() => router.push({ pathname: '/build', params: { plot: plot.key } })}
+        />
+      )}
       <Button
         variant="outline"
         title={t('plot.sell')}
@@ -165,6 +170,28 @@ export default function PlotRoute() {
               </Text>
             </View>
           </InfoRow>
+          {plot.mine && (
+            <InfoRow label={t('plot.upgradeIncome')}>
+              {plot.nextLevel ? (
+                <View style={styles.inline}>
+                  <Ionicons name="arrow-up-circle-outline" size={16} color={C.green} />
+                  <Text variant="smallBold" color={C.green}>
+                    +{plot.nextLevel.incomePerDay - plot.incomePerDay}
+                    {t('common.perDay')}
+                  </Text>
+                </View>
+              ) : (
+                t('build.maxLevel')
+              )}
+            </InfoRow>
+          )}
+          {plot.neighbours > 0 && (
+            <InfoRow label={t('plot.neighbours')}>
+              <Text variant="smallBold" color={C.green}>
+                {t('plot.neighbourBonus', { count: plot.neighbours, pct: plot.neighbours * 5 })}
+              </Text>
+            </InfoRow>
+          )}
           <InfoRow label={t('plot.owner')}>
             {plot.mine ? t('common.you') : (plot.owner?.displayName ?? t('plot.nobody'))}
           </InfoRow>

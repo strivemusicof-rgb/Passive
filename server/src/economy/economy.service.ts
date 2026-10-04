@@ -18,10 +18,18 @@ export const ECONOMY_DEFAULTS = {
   plotPriceGrowth: 0.05,
   /** Relative chance of each rarity when a plot is bought (landmarks improve it). */
   rarityWeights: { common: 60, uncommon: 25, rare: 10, epic: 4, legendary: 1 } as Record<Rarity, number>,
-  /** Coins per day an empty plot earns, by rarity. */
-  rarityIncome: { common: 3, uncommon: 6, rare: 12, epic: 25, legendary: 50 } as Record<Rarity, number>,
-  /** Extra coins per day by building level (0 = empty, 1 house … 4 tower). */
-  buildingIncome: [0, 3, 10, 30, 100],
+  /** Coins per day an empty plot earns, by rarity (common pays back its price in ~3 days). */
+  rarityIncome: { common: 48, uncommon: 72, rare: 120, epic: 192, legendary: 360 } as Record<Rarity, number>,
+  /** Extra coins per day by building level (0 = empty, 1 house, 2 office, 3 hotel, 4 tower). */
+  buildingIncome: [0, 48, 168, 480, 1440],
+  /** Coins to build/upgrade TO each level (index 1 = house). Each pays back in ~10–28 days. */
+  buildingCost: [0, 500, 2500, 10000, 40000],
+  /** Income bonus for each of the 8 surrounding plots you also own (0.05 = +5%, max +40%). */
+  neighbourBonus: 0.05,
+  /** Hours a plot keeps earning before it must be collected, by storage level. */
+  storageHours: [8, 12, 16, 24],
+  /** Coins to upgrade storage TO each level. */
+  storageCost: [0, 2000, 6000, 15000],
   /** Landmarks where buying gives better rarity odds. */
   hotspots: [
     { name: 'Riga Old Town', lat: 56.9488, lng: 24.1064, radiusM: 700, boost: 1.0 },

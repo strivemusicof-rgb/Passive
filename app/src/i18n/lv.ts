@@ -68,6 +68,8 @@ const lv: Translations = {
     profile: 'Profils',
   },
   plot: {
+    neighbours: 'Kaimiņu bonuss',
+    neighbourBonus: '{{count}} blakus: +{{pct}}%',
     odds: 'Tavas izredzes',
     oddsHint: 'Retumu nosaka pirkšanas brīdī. Retāki gabali pelna vairāk.',
     landmark: 'Tuvumā ir apskates vieta: labākas izredzes!',
@@ -114,6 +116,13 @@ const lv: Translations = {
     visible: 'Tavu zemi tirgū redzēs\nvisi spēlētāji.',
   },
   build: {
+    choosePlot: 'Izvēlies gabalu būvniecībai',
+    allPlots: 'Visi gabali',
+    maxLevel: 'Maks. līmenis',
+    storage: 'Krātuve',
+    storageHours: 'Tavi gabali pelna {{hours}} stundas, tad gaida, kamēr savāksi.',
+    storageUpgrade: '{{hours}} st',
+    storageCost: 'Uzlabojums maksā {{cost}} monētas',
     title: 'Ēkas',
     subtitle: 'Uzlabo savu zemi un palielini ienākumus',
   },
@@ -209,6 +218,11 @@ const lv: Translations = {
     deleteTitle: 'Dzēst kontu?',
     deleteBody: 'Tava zeme, monētas un progress tiks neatgriezeniski dzēsti.',
     cancel: 'Atcelt',
+  },
+  collect: {
+    button: 'Savākt {{coins}}',
+    full: 'Krātuve pilna: savāc tagad!',
+    nothing: 'Vēl nav ko savākt',
   },
   more: {
     title: 'Vairāk',

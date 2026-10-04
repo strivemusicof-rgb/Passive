@@ -2,10 +2,13 @@ import type {
   ApiErrorCode,
   AuthResponse,
   BuyPlotResponse,
+  CollectResponse,
+  IncomeDto,
   HealthResponse,
   Language,
   MapPlotsResponse,
   PlotDto,
+  UpgradeResponse,
   UserDto,
   WalletDto,
 } from '@landrush/shared';
@@ -93,4 +96,9 @@ export const api = {
   claimStarter: (lat: number, lng: number) =>
     request<BuyPlotResponse>('POST', '/plots/starter', { lat, lng }),
   myPlots: () => request<PlotDto[]>('GET', '/me/plots'),
+  income: () => request<IncomeDto>('GET', '/me/income'),
+  collect: () => request<CollectResponse>('POST', '/collect'),
+  upgradePlot: (key: string) =>
+    request<UpgradeResponse>('POST', `/plots/${encodeURIComponent(key)}/upgrade`),
+  upgradeStorage: () => request<Omit<CollectResponse, 'collected'>>('POST', '/me/storage/upgrade'),
 };

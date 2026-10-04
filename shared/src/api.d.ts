@@ -36,7 +36,9 @@ export type ApiErrorCode =
   | 'starter_already_claimed'
   | 'no_free_plot_nearby'
   | 'invalid_plot'
-  | 'area_too_large';
+  | 'area_too_large'
+  | 'not_your_plot'
+  | 'max_level';
 
 export interface WalletDto {
   coins: number;
@@ -61,8 +63,12 @@ export interface PlotDto {
   owner: { id: string; displayName: string } | null;
   mine: boolean;
   buildingLevel: number;
-  /** Owned plots only (free plots earn nothing until bought). */
+  /** Owned plots only (free plots earn nothing until bought). Includes the neighbour bonus. */
   incomePerDay: number;
+  /** Owned plots: how many of the 8 surrounding plots the same owner has. */
+  neighbours: number;
+  /** Your own plots: cost and new income/day of the next building level; null at max level. */
+  nextLevel: { level: number; cost: number; incomePerDay: number } | null;
   /** What it costs the viewer to buy it now; null if it's owned. */
   price: number | null;
   name: string | null;
@@ -77,4 +83,35 @@ export interface MapPlotsResponse {
 export interface BuyPlotResponse {
   plot: PlotDto;
   wallet: WalletDto;
+  income: IncomeDto;
+}
+
+/** The player's income state (GET /me/income). */
+export interface IncomeDto {
+  /** Sum of all plots' income, per day. */
+  perDay: number;
+  /** Coins waiting right now (server-calculated). */
+  pending: number;
+  storageLevel: number;
+  storageHours: number;
+  /** When storage is completely full; null with no plots. */
+  fullAt: string | null;
+  /** Server time of this snapshot, for client-side counting between refreshes. */
+  serverTime: string;
+  nextStorage: { level: number; hours: number; cost: number } | null;
+  /** Price list for the building screen (index = level). */
+  buildingCost: number[];
+  buildingIncome: number[];
+}
+
+export interface CollectResponse {
+  collected: number;
+  wallet: WalletDto;
+  income: IncomeDto;
+}
+
+export interface UpgradeResponse {
+  plot: PlotDto;
+  wallet: WalletDto;
+  income: IncomeDto;
 }

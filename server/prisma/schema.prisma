@@ -37,6 +37,8 @@ model User {
   lastSeenAt   DateTime  @default(now()) @map("last_seen_at")
   /// The one free plot every player gets.
   starterClaimed Boolean @default(false) @map("starter_claimed")
+  /// Index into economy storageHours (how long plots keep earning before Collect).
+  storageLevel Int       @default(0) @map("storage_level")
   sessions     Session[]
   wallet       Wallet?
   transactions Transaction[]
@@ -107,6 +109,8 @@ model Plot {
   rarity        String
   buildingLevel Int      @default(0) @map("building_level")
   name          String?
+  /// Income accrues from here (capped by the owner's storage); reset on collect.
+  collectedAt   DateTime @default(now()) @map("collected_at")
   acquiredAt    DateTime @default(now()) @map("acquired_at")
   createdAt     DateTime @default(now()) @map("created_at")
 

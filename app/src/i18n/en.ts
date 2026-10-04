@@ -66,6 +66,8 @@ const en = {
     profile: 'Profile',
   },
   plot: {
+    neighbours: 'Neighbour bonus',
+    neighbourBonus: '{{count}} next door: +{{pct}}%',
     odds: 'Your chances',
     oddsHint: 'Rarity is decided when you buy. Rarer plots earn more.',
     landmark: 'Landmark nearby: better chances!',
@@ -112,6 +114,13 @@ const en = {
     visible: 'Your land will be visible to all players\nin the marketplace.',
   },
   build: {
+    choosePlot: 'Choose a plot to build on',
+    allPlots: 'All plots',
+    maxLevel: 'Max level',
+    storage: 'Storage',
+    storageHours: 'Your plots earn for {{hours}} hours, then wait for you to collect.',
+    storageUpgrade: '{{hours}} h',
+    storageCost: 'Upgrade costs {{cost}} coins',
     title: 'Buildings',
     subtitle: 'Upgrade your plots and increase income',
   },
@@ -207,6 +216,11 @@ const en = {
     deleteTitle: 'Delete account?',
     deleteBody: 'Your land, coins and progress will be deleted forever. This cannot be undone.',
     cancel: 'Cancel',
+  },
+  collect: {
+    button: 'Collect {{coins}}',
+    full: 'Storage full: collect now!',
+    nothing: 'Nothing to collect yet',
   },
   more: {
     title: 'More',

@@ -58,7 +58,7 @@ describe('prices and income', () => {
   });
 
   it('income = rarity base + building bonus', () => {
-    expect(plotIncome('rare', 0, ECONOMY_DEFAULTS)).toBe(12);
-    expect(plotIncome('rare', 1, ECONOMY_DEFAULTS)).toBe(15);
+    expect(plotIncome('rare', 0, ECONOMY_DEFAULTS)).toBe(120);
+    expect(plotIncome('rare', 1, ECONOMY_DEFAULTS)).toBe(168);
   });
 });

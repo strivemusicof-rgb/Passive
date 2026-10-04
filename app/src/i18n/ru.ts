@@ -68,6 +68,8 @@ const ru: Translations = {
     profile: 'Профиль',
   },
   plot: {
+    neighbours: 'Бонус соседей',
+    neighbourBonus: '{{count}} рядом: +{{pct}}%',
     odds: 'Ваши шансы',
     oddsHint: 'Редкость определяется при покупке. Редкие участки приносят больше.',
     landmark: 'Рядом достопримечательность: шансы выше!',
@@ -114,6 +116,13 @@ const ru: Translations = {
     visible: 'Ваш участок увидят все игроки\nна рынке.',
   },
   build: {
+    choosePlot: 'Выберите участок для стройки',
+    allPlots: 'Все участки',
+    maxLevel: 'Макс. уровень',
+    storage: 'Хранилище',
+    storageHours: 'Участки приносят доход {{hours}} ч, потом ждут, пока вы соберёте.',
+    storageUpgrade: '{{hours}} ч',
+    storageCost: 'Улучшение стоит {{cost}} монет',
     title: 'Здания',
     subtitle: 'Улучшайте участки и увеличивайте доход',
   },
@@ -209,6 +218,11 @@ const ru: Translations = {
     deleteTitle: 'Удалить аккаунт?',
     deleteBody: 'Ваша земля, монеты и прогресс будут удалены навсегда. Это нельзя отменить.',
     cancel: 'Отмена',
+  },
+  collect: {
+    button: 'Собрать {{coins}}',
+    full: 'Хранилище полно: соберите сейчас!',
+    nothing: 'Пока нечего собирать',
   },
   more: {
     title: 'Ещё',
