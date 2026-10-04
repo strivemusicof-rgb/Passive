@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/text';
 import { C, R, S } from '@/constants/theme';
 import { errorMessage } from '@/lib/error-message';
 import { estimatePending, game, perHour, useGame } from '@/lib/game';
+import { allowReminders, scheduleStorageFull } from '@/lib/notifications';
 import { useNow } from '@/lib/use-now';
 
 /** "+N coins/h" with a live-counting Collect button (top of the map). */
@@ -24,6 +25,8 @@ export function CollectCard({ style }: { style?: StyleProp<ViewStyle> }) {
     try {
       const got = await game.collect();
       setMessage({ text: got > 0 ? `+${formatNumber(got)}` : t('collect.nothing') });
+      // After the first collect, offer a reminder for when storage is full again.
+      if (got > 0 && (await allowReminders())) scheduleStorageFull(game.snapshot().income?.fullAt ?? null);
     } catch (e) {
       setMessage({ text: errorMessage(t, e), error: true });
     } finally {

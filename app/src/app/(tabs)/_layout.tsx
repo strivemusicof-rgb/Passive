@@ -19,6 +19,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="leaderboard" options={{ href: null }} />
       <Tabs.Screen name="profile" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />
+      <Tabs.Screen name="badges" options={{ href: null }} />
     </Tabs>
   );
 }

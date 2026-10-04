@@ -10,6 +10,8 @@ export interface UserDto {
   language: Language;
   level: number;
   xp: number;
+  /** XP inside the current level, and how much the level takes in total. */
+  levelXp: { current: number; needed: number };
   createdAt: string;
 }
 
@@ -38,7 +40,12 @@ export type ApiErrorCode =
   | 'invalid_plot'
   | 'area_too_large'
   | 'not_your_plot'
-  | 'max_level';
+  | 'max_level'
+  | 'already_claimed'
+  | 'not_complete'
+  | 'already_checked_in'
+  | 'too_far'
+  | 'check_in_limit';
 
 export interface WalletDto {
   coins: number;
@@ -114,4 +121,48 @@ export interface UpgradeResponse {
   plot: PlotDto;
   wallet: WalletDto;
   income: IncomeDto;
+}
+
+export interface MissionDto {
+  key: string;
+  progress: number;
+  target: number;
+  claimed: boolean;
+  coins: number;
+  gems: number;
+  xp: number;
+}
+
+export interface MissionsResponse {
+  daily: MissionDto[];
+  weekly: MissionDto[];
+  /** ISO times of the next resets (Riga midnight / Monday). */
+  dailyResetsAt: string;
+  weeklyResetsAt: string;
+}
+
+export interface DailyRewardDto {
+  /** The streak day the next claim gives (1–7). */
+  nextDay: number;
+  claimedToday: boolean;
+  /** Day claimed most recently (0 = none yet). */
+  streakDay: number;
+  rewards: { coins: number; gems: number }[];
+}
+
+/** Returned by every claim/check-in: what changed. */
+export interface RewardResponse {
+  coins: number;
+  gems: number;
+  xp: number;
+  leveledUp: boolean;
+  wallet: WalletDto;
+  user: UserDto;
+}
+
+export interface AchievementDto {
+  key: string;
+  unlocked: boolean;
+  progress: number;
+  target: number;
 }

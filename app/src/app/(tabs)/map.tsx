@@ -8,6 +8,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CollectCard } from '@/components/collect-card';
+import { DailyPopup } from '@/components/daily-popup';
 import { GameMap, type GameMapHandle, type MapCell } from '@/components/game-map';
 import { Avatar } from '@/components/ui/avatar';
 import { Amount } from '@/components/ui/currency';
@@ -103,7 +104,7 @@ export default function MapRoute() {
           <Avatar name={user?.displayName ?? '?'} size={38} ring={C.green} />
           <View style={styles.levelText}>
             <Text variant="smallBold">{t('common.lv', { level: user?.level ?? 1 })}</Text>
-            <Progress value={(user?.xp ?? 0) / 1000} height={4} />
+            <Progress value={user ? user.levelXp.current / user.levelXp.needed : 0} height={4} />
           </View>
         </Pressable>
         <View style={styles.balances}>
@@ -114,6 +115,8 @@ export default function MapRoute() {
           </Pressable>
         </View>
       </View>
+
+      <DailyPopup />
 
       {/* Income + collect */}
       <CollectCard style={[styles.collect, { top: insets.top + 64 }]} />

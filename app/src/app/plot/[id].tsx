@@ -18,6 +18,7 @@ import { Text } from '@/components/ui/text';
 import { C, R, RARITY_COLORS, S } from '@/constants/theme';
 import { errorMessage } from '@/lib/error-message';
 import { game, useGame } from '@/lib/game';
+import { currentPosition } from '@/lib/location';
 import { usePlot } from '@/lib/use-plot';
 
 /** 5. Land details (owned or free). `id` is the plot's "row_col" key. */
@@ -29,6 +30,7 @@ export default function PlotRoute() {
   const [buying, setBuying] = useState(false);
   const [buyError, setBuyError] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<Rarity | null>(null);
+  const [checkIn, setCheckIn] = useState<{ busy: boolean; text?: string; error?: boolean }>({ busy: false });
 
   if (error) {
     return (
@@ -65,8 +67,36 @@ export default function PlotRoute() {
     }
   };
 
+  /** Bonus for standing at your own plot (the server checks the distance). */
+  const doCheckIn = async () => {
+    setCheckIn({ busy: true });
+    const pos = await currentPosition();
+    if (!pos) return setCheckIn({ busy: false, text: t('checkIn.needLocation'), error: true });
+    try {
+      const res = await game.checkIn(plot.key, pos.lat, pos.lng);
+      setCheckIn({
+        busy: false,
+        text: `${t('checkIn.done', { coins: res.coins, xp: res.xp })}${res.leveledUp ? `  ·  ${t('progress.levelUp', { level: res.user.level })}` : ''}`,
+      });
+    } catch (e) {
+      setCheckIn({ busy: false, text: errorMessage(t, e), error: true });
+    }
+  };
+
   const footer = plot.mine ? (
     <>
+      {checkIn.text && (
+        <Text variant="smallBold" color={checkIn.error ? C.danger : C.coin} center>
+          {checkIn.text}
+        </Text>
+      )}
+      <Button
+        variant="outline"
+        title={t('checkIn.button')}
+        icon={<Ionicons name="walk" size={18} color={C.text} />}
+        onPress={doCheckIn}
+        disabled={checkIn.busy}
+      />
       {plot.nextLevel && (
         <Button
           title={t('plot.upgrade')}

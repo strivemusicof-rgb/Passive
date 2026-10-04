@@ -3,11 +3,13 @@ import type { Language, UserDto } from '@landrush/shared';
 import { randomInt } from 'node:crypto';
 
 import { Prisma, type User } from '../generated/prisma/client.js';
+import { levelProgress } from '../progress/levels.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 export const nameKey = (name: string) => name.trim().toLowerCase();
 
 export function toUserDto(u: User): UserDto {
+  const { current, needed } = levelProgress(u.xp);
   return {
     id: u.id,
     displayName: u.displayName,
@@ -17,6 +19,7 @@ export function toUserDto(u: User): UserDto {
     language: u.language as Language,
     level: u.level,
     xp: u.xp,
+    levelXp: { current, needed },
     createdAt: u.createdAt.toISOString(),
   };
 }

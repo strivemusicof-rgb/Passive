@@ -1,7 +1,17 @@
-import type { IncomeDto, PlotDto, WalletDto } from '@landrush/shared';
+import type {
+  AchievementDto,
+  DailyRewardDto,
+  IncomeDto,
+  MissionsResponse,
+  PlotDto,
+  RewardResponse,
+  WalletDto,
+} from '@landrush/shared';
 import { useEffect, useSyncExternalStore } from 'react';
 
 import { api } from './api';
+import { auth } from './auth';
+import { scheduleStorageFull } from './notifications';
 
 /** Player's wallet, plots and income, shared by every screen (same pattern as auth). */
 type State = {
@@ -10,16 +20,44 @@ type State = {
   income: IncomeDto | null;
   /** Local time when `income` arrived, to count pending coins up between refreshes. */
   incomeAt: number;
+  missions: MissionsResponse | null;
+  daily: DailyRewardDto | null;
+  achievements: AchievementDto[] | null;
   /** Bumped after any change to plots, so the map knows to reload. */
   version: number;
 };
 
-let state: State = { wallet: null, myPlots: null, income: null, incomeAt: 0, version: 0 };
+const EMPTY: State = {
+  wallet: null,
+  myPlots: null,
+  income: null,
+  incomeAt: 0,
+  missions: null,
+  daily: null,
+  achievements: null,
+  version: 0,
+};
+let state: State = EMPTY;
 const listeners = new Set<() => void>();
 
 function set(patch: Partial<State>) {
   state = { ...state, ...patch };
+  if (patch.income !== undefined) scheduleStorageFull(patch.income?.fullAt ?? null);
   listeners.forEach((l) => l());
+}
+
+/** After any action: missions/achievements may have moved; XP may have changed. */
+function refreshProgress() {
+  api.missions().then((missions) => set({ missions })).catch(() => {});
+  api.achievements().then((achievements) => set({ achievements })).catch(() => {});
+  auth.refreshUser().catch(() => {});
+}
+
+function applyReward(res: RewardResponse) {
+  set({ wallet: res.wallet });
+  auth.setUser(res.user);
+  refreshProgress();
+  return res;
 }
 
 function withPlot(plot: PlotDto) {
@@ -27,13 +65,24 @@ function withPlot(plot: PlotDto) {
 }
 
 let loading: Promise<void> | null = null;
+/** True once everything has been fetched (claiming the starter plot fills only the wallet). */
+let loaded = false;
 
 export const game = {
+  snapshot: () => state,
   load: () =>
     (loading ??= (async () => {
       try {
-        const [wallet, myPlots, income] = await Promise.all([api.wallet(), api.myPlots(), api.income()]);
-        set({ wallet, myPlots, income, incomeAt: Date.now() });
+        const [wallet, myPlots, income, missions, daily] = await Promise.all([
+          api.wallet(),
+          api.myPlots(),
+          api.income(),
+          api.missions(),
+          api.daily(),
+        ]);
+        loaded = true;
+        set({ wallet, myPlots, income, incomeAt: Date.now(), missions, daily });
+        api.achievements().then((achievements) => set({ achievements })).catch(() => {});
       } finally {
         loading = null;
       }
@@ -43,6 +92,7 @@ export const game = {
     const res = await api.buyPlot(key);
     set({ wallet: res.wallet, myPlots: withPlot(res.plot), income: res.income, incomeAt: Date.now(), version: state.version + 1 });
     api.myPlots().then((myPlots) => set({ myPlots })).catch(() => {});
+    refreshProgress();
     return res.plot;
   },
   claimStarter: async (lat: number, lng: number) => {
@@ -53,19 +103,32 @@ export const game = {
   collect: async () => {
     const res = await api.collect();
     set({ wallet: res.wallet, income: res.income, incomeAt: Date.now() });
+    if (res.collected > 0) refreshProgress();
     return res.collected;
   },
   upgrade: async (key: string) => {
     const res = await api.upgradePlot(key);
     set({ wallet: res.wallet, myPlots: withPlot(res.plot), income: res.income, incomeAt: Date.now(), version: state.version + 1 });
+    refreshProgress();
     return res.plot;
   },
   upgradeStorage: async () => {
     const res = await api.upgradeStorage();
     set({ wallet: res.wallet, income: res.income, incomeAt: Date.now() });
   },
+  claimMission: async (scope: 'daily' | 'weekly', key: string) => applyReward(await api.claimMission(scope, key)),
+  claimDaily: async () => {
+    const res = await api.claimDaily();
+    set({ daily: res.daily });
+    return applyReward(res);
+  },
+  checkIn: async (key: string, lat: number, lng: number) => applyReward(await api.checkIn(key, lat, lng)),
   /** Forget everything (sign out / account deleted). */
-  reset: () => set({ wallet: null, myPlots: null, income: null, incomeAt: 0, version: state.version + 1 }),
+  reset: () => {
+    loaded = false;
+    scheduleStorageFull(null);
+    set({ ...EMPTY, version: state.version + 1 });
+  },
 };
 
 function subscribe(listener: () => void) {
@@ -77,7 +140,7 @@ function subscribe(listener: () => void) {
 export function useGame() {
   const snapshot = useSyncExternalStore(subscribe, () => state);
   useEffect(() => {
-    if (!state.wallet) game.load().catch(() => {});
+    if (!loaded) game.load().catch(() => {});
   }, []);
   return snapshot;
 }

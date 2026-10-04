@@ -1,13 +1,17 @@
 import type {
   ApiErrorCode,
+  AchievementDto,
   AuthResponse,
   BuyPlotResponse,
   CollectResponse,
+  DailyRewardDto,
   IncomeDto,
   HealthResponse,
   Language,
   MapPlotsResponse,
+  MissionsResponse,
   PlotDto,
+  RewardResponse,
   UpgradeResponse,
   UserDto,
   WalletDto,
@@ -101,4 +105,12 @@ export const api = {
   upgradePlot: (key: string) =>
     request<UpgradeResponse>('POST', `/plots/${encodeURIComponent(key)}/upgrade`),
   upgradeStorage: () => request<Omit<CollectResponse, 'collected'>>('POST', '/me/storage/upgrade'),
+  missions: () => request<MissionsResponse>('GET', '/missions'),
+  claimMission: (scope: 'daily' | 'weekly', key: string) =>
+    request<RewardResponse>('POST', `/missions/${scope}/${encodeURIComponent(key)}/claim`),
+  daily: () => request<DailyRewardDto>('GET', '/daily'),
+  claimDaily: () => request<RewardResponse & { daily: DailyRewardDto }>('POST', '/daily/claim'),
+  checkIn: (key: string, lat: number, lng: number) =>
+    request<RewardResponse>('POST', `/plots/${encodeURIComponent(key)}/checkin`, { lat, lng }),
+  achievements: () => request<AchievementDto[]>('GET', '/me/achievements'),
 };

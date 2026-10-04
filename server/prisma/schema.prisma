@@ -39,10 +39,16 @@ model User {
   starterClaimed Boolean @default(false) @map("starter_claimed")
   /// Index into economy storageHours (how long plots keep earning before Collect).
   storageLevel Int       @default(0) @map("storage_level")
+  /// Day of the 7-day login streak claimed most recently (1–7; 0 = never).
+  streakDay    Int       @default(0) @map("streak_day")
+  /// Riga calendar day (YYYY-MM-DD) of the last daily-reward claim.
+  lastDailyClaim String? @map("last_daily_claim")
   sessions     Session[]
   wallet       Wallet?
   transactions Transaction[]
   plots        Plot[]
+  missions     MissionProgress[]
+  checkIns     CheckIn[]
 
   @@map("users")
 }
@@ -117,4 +123,32 @@ model Plot {
   @@id([row, col])
   @@index([ownerId])
   @@map("plots")
+}
+
+/// Progress on one mission in one period ("d:2026-10-04" or "w:2026-W40").
+model MissionProgress {
+  userId    String    @map("user_id") @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  period    String
+  key       String
+  progress  Int       @default(0)
+  claimedAt DateTime? @map("claimed_at")
+
+  @@id([userId, period, key])
+  @@map("mission_progress")
+}
+
+/// A player standing at their own plot (once per plot per Riga day).
+model CheckIn {
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  row       Int
+  col       Int
+  day       String
+  reward    Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([userId, row, col, day])
+  @@index([userId, day])
+  @@map("check_ins")
 }

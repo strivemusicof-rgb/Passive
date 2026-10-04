@@ -96,6 +96,9 @@ let restoring: Promise<void> | null = null;
 
 export const auth = {
   start: () => (restoring ??= restore()),
+  /** Rewards return the updated player (XP, level). */
+  setUser: (user: UserDto) => set({ user }),
+  refreshUser: async () => set({ user: await api.me() }),
   signInGuest: async () => signedIn(await api.guest()),
   signInApple: async (identityToken: string) => signedIn(await api.apple(identityToken)),
   signInEmail: async (email: string, password: string, mode: 'login' | 'register') =>

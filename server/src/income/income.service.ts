@@ -5,6 +5,7 @@ import { cellKey, neighbours, type Cell } from '@landrush/shared/grid';
 import { EconomyService } from '../economy/economy.service.js';
 import { pendingCoins, plotIncomePerDay, storageFullAt, storageHoursFor, type IncomePlot } from '../economy/income.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { TrackerService } from '../progress/tracker.service.js';
 import { WalletService, type Tx } from '../wallet/wallet.service.js';
 
 /** How many of a cell's 8 neighbours are in `ownedKeys`. */
@@ -18,6 +19,7 @@ export class IncomeService {
     private readonly prisma: PrismaService,
     private readonly economy: EconomyService,
     private readonly wallet: WalletService,
+    private readonly tracker: TrackerService,
   ) {}
 
   /**
@@ -48,6 +50,8 @@ export class IncomeService {
     return this.prisma.$transaction(async (tx) => {
       await this.lock(tx, userId);
       const res = await this.collect(tx, userId);
+      // Only a real collect counts for missions (tapping with nothing waiting doesn't).
+      if (res.collected > 0) await this.tracker.track(tx, userId, 'collect');
       return { ...res, income: await this.summary(userId, tx) };
     });
   }

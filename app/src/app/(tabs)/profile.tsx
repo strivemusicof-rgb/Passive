@@ -14,15 +14,14 @@ import { Text } from '@/components/ui/text';
 import { C, S } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { useGame } from '@/lib/game';
-import { me } from '@/mock/data';
 
 /** 12. Profile. */
 export default function ProfileRoute() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { myPlots } = useGame();
-  const name = user?.displayName ?? me.name;
-  const level = user?.level ?? me.level;
+  const { myPlots, achievements } = useGame();
+  const name = user?.displayName ?? '';
+  const level = user?.level ?? 1;
   return (
     <Screen tabs>
       <Header
@@ -45,9 +44,9 @@ export default function ProfileRoute() {
           <Text variant="small" color={C.textSecondary}>
             {t('common.lv', { level })}
           </Text>
-          <Progress value={me.xp / me.xpNext} height={6} />
+          <Progress value={user ? user.levelXp.current / user.levelXp.needed : 0} height={6} />
           <Text variant="tiny" color={C.textSecondary}>
-            {formatNumber(me.xp)} / {formatNumber(me.xpNext)} XP
+            {formatNumber(user?.levelXp.current ?? 0)} / {formatNumber(user?.levelXp.needed ?? 100)} XP
           </Text>
         </View>
       </View>
@@ -55,15 +54,15 @@ export default function ProfileRoute() {
       <Card style={styles.stats}>
         <Stat value={myPlots?.length ?? 0} label={t('profile.plots')} />
         <View style={styles.vline} />
-        <Stat value={me.districts} label={t('profile.districts')} />
+        <Stat value={0} label={t('profile.districts')} />
         <View style={styles.vline} />
-        <Stat value={me.achievements} label={t('profile.achievements')} />
+        <Stat value={achievements?.filter((a) => a.unlocked).length ?? 0} label={t('profile.achievements')} />
       </Card>
 
       <Card>
         <MenuRow icon="swap-horizontal-outline" label={t('profile.trading')} />
         <MenuRow icon="bar-chart-outline" label={t('profile.statistics')} />
-        <MenuRow icon="ribbon-outline" label={t('profile.badges')} />
+        <MenuRow icon="ribbon-outline" label={t('profile.badges')} onPress={() => router.push('/badges')} />
         <MenuRow icon="settings-outline" label={t('profile.settings')} onPress={() => router.push('/settings')} />
         <MenuRow icon="help-circle-outline" label={t('profile.help')} last />
       </Card>

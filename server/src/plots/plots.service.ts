@@ -8,6 +8,7 @@ import { hotspotBoost, plotPrice, rarityOdds, rollRarity } from '../economy/rari
 import { Prisma } from '../generated/prisma/client.js';
 import { IncomeService, ownedNeighbours } from '../income/income.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { TrackerService } from '../progress/tracker.service.js';
 import { WalletService, type Tx } from '../wallet/wallet.service.js';
 
 const withOwner = { owner: { select: { id: true, displayName: true } } } as const;
@@ -25,6 +26,7 @@ export class PlotsService {
     private readonly economy: EconomyService,
     private readonly wallet: WalletService,
     private readonly income: IncomeService,
+    private readonly tracker: TrackerService,
   ) {}
 
   async map(bounds: CellBounds, viewerId: string): Promise<MapPlotsResponse> {
@@ -105,8 +107,11 @@ export class PlotsService {
       if (next >= economy.buildingCost.length) throw new BadRequestException({ code: 'max_level' });
       // Collect at the old rate first, so the new building never earns for the past.
       await this.income.collect(tx, userId);
-      const wallet = await this.wallet.change(tx, userId, 'coins', -economy.buildingCost[next], 'building_upgrade', cellKey(cell));
+      let wallet = await this.wallet.change(tx, userId, 'coins', -economy.buildingCost[next], 'building_upgrade', cellKey(cell));
       const updated = await tx.plot.update({ where: { row_col: cell }, data: { buildingLevel: next }, include: withOwner });
+      await this.tracker.track(tx, userId, 'upgrade');
+      const { gems } = await this.tracker.addXp(tx, userId, economy.xpFor.upgrade);
+      if (gems > 0) wallet = await this.wallet.ensure(tx, userId);
       return {
         plot: this.ownedDto(updated, userId, economy, await this.neighbourCount(tx, updated)),
         wallet,
@@ -142,6 +147,9 @@ export class PlotsService {
           if (count !== 1) throw new ConflictException({ code: 'starter_already_claimed' });
         } else {
           wallet = await this.wallet.change(tx, userId, 'coins', -plotPrice(ownedCount, economy), 'plot_purchase', cellKey(cell));
+          await this.tracker.track(tx, userId, 'buyPlot');
+          const { gems } = await this.tracker.addXp(tx, userId, economy.xpFor.buyPlot);
+          if (gems > 0) wallet = await this.wallet.ensure(tx, userId);
         }
         return {
           plot: this.ownedDto(plot, userId, economy, await this.neighbourCount(tx, plot)),

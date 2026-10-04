@@ -30,6 +30,38 @@ export const ECONOMY_DEFAULTS = {
   storageHours: [8, 12, 16, 24],
   /** Coins to upgrade storage TO each level. */
   storageCost: [0, 2000, 6000, 15000],
+  /** Missions per period. `event` is what counts towards `target`. */
+  missions: {
+    daily: [
+      { key: 'login', event: 'login', target: 1, coins: 50, gems: 0, xp: 5 },
+      { key: 'collect', event: 'collect', target: 1, coins: 50, gems: 0, xp: 10 },
+      { key: 'buyPlot', event: 'buyPlot', target: 1, coins: 100, gems: 0, xp: 20 },
+      { key: 'upgrade', event: 'upgrade', target: 1, coins: 100, gems: 0, xp: 20 },
+      { key: 'checkIn', event: 'checkIn', target: 1, coins: 80, gems: 0, xp: 15 },
+    ] as MissionDef[],
+    weekly: [
+      { key: 'collect10', event: 'collect', target: 10, coins: 600, gems: 5, xp: 100 },
+      { key: 'buyPlot3', event: 'buyPlot', target: 3, coins: 800, gems: 5, xp: 120 },
+      { key: 'upgrade3', event: 'upgrade', target: 3, coins: 1000, gems: 10, xp: 150 },
+      { key: 'checkIn5', event: 'checkIn', target: 5, coins: 800, gems: 10, xp: 120 },
+    ] as MissionDef[],
+  },
+  /** 7-day login streak rewards (day 1 … day 7, then it starts over). */
+  dailyRewards: [
+    { coins: 100, gems: 0 },
+    { coins: 150, gems: 0 },
+    { coins: 0, gems: 5 },
+    { coins: 300, gems: 0 },
+    { coins: 0, gems: 10 },
+    { coins: 500, gems: 0 },
+    { coins: 1000, gems: 25 },
+  ],
+  /** XP for actions (missions have their own XP). */
+  xpFor: { buyPlot: 10, upgrade: 25, checkIn: 15, dailyReward: 5 },
+  /** Gems for every level gained. */
+  levelUpGems: 5,
+  /** Standing at your own plot: once per plot per day. */
+  checkIn: { radiusM: 100, rewardShare: 0.25, maxPerDay: 10 },
   /** Landmarks where buying gives better rarity odds. */
   hotspots: [
     { name: 'Riga Old Town', lat: 56.9488, lng: 24.1064, radiusM: 700, boost: 1.0 },
@@ -39,6 +71,9 @@ export const ECONOMY_DEFAULTS = {
     { name: 'Vilnius Old Town', lat: 54.6812, lng: 25.2873, radiusM: 800, boost: 1.0 },
   ] as Hotspot[],
 };
+
+export type MissionEvent = 'login' | 'collect' | 'buyPlot' | 'upgrade' | 'checkIn';
+export type MissionDef = { key: string; event: MissionEvent; target: number; coins: number; gems: number; xp: number };
 
 export type Economy = typeof ECONOMY_DEFAULTS;
 
