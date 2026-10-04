@@ -48,3 +48,14 @@ function rigaOffsetMinutes(at: Date): number {
 
 export const dailyPeriod = (at: Date) => `d:${gameDay(at)}`;
 export const weeklyPeriod = (at: Date) => `w:${gameWeek(at)}`;
+
+/** The Riga calendar month around `at`: "2026-10" and its start/end as instants. */
+export function gameMonth(at: Date): { month: string; start: Date; end: Date } {
+  const [y, m] = gameDay(at).split('-').map(Number);
+  const startOf = (year: number, month: number) => {
+    // Midnight Riga time on the 1st: take the offset at noon that day (DST-safe enough).
+    const noon = new Date(Date.UTC(year, month - 1, 1, 12));
+    return new Date(Date.UTC(year, month - 1, 1) - rigaOffsetMinutes(noon) * 60_000);
+  };
+  return { month: `${y}-${String(m).padStart(2, '0')}`, start: startOf(y, m), end: startOf(m === 12 ? y + 1 : y, m === 12 ? 1 : m + 1) };
+}

@@ -129,6 +129,16 @@ export const ECONOMY_DEFAULTS = {
     maxActiveListings: 20,
     maxBuysPerDay: 10,
   },
+  /**
+   * Leaderboards. The monthly board ranks coins collected from land this
+   * month; when a month ends its top players get these gems (index 0 = 1st).
+   */
+  leaderboard: {
+    size: 50,
+    monthlyPrizeGems: [100, 60, 40, 20, 20, 10, 10, 10, 10, 10],
+    /** "Near you": plots within this many degrees of your newest plot (~11 km). */
+    nearDeg: 0.1,
+  },
   /** Landmarks where buying gives better rarity odds. */
   hotspots: [
     { name: 'Riga Old Town', lat: 56.9488, lng: 24.1064, radiusM: 700, boost: 1.0 },

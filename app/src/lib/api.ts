@@ -1,4 +1,6 @@
 import type {
+  LeaderboardResponse,
+  LeaderboardScope,
   ListingDto,
   MarketBuyResponse,
   MarketResponse,
@@ -140,6 +142,7 @@ export const api = {
     request<ListingDto>('POST', `/plots/${encodeURIComponent(key)}/list`, { price }),
   cancelListing: (id: string) => request<ListingDto>('POST', `/market/${id}/cancel`),
   buyListing: (id: string) => request<MarketBuyResponse>('POST', `/market/${id}/buy`),
+  leaderboard: (scope: LeaderboardScope) => request<LeaderboardResponse>('GET', `/leaderboard?scope=${scope}`),
   favourite: (key: string, on: boolean) =>
     request<{ favourite: boolean }>(on ? 'PUT' : 'DELETE', `/plots/${encodeURIComponent(key)}/favourite`),
 };

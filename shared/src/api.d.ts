@@ -295,3 +295,30 @@ export interface MarketBuyResponse {
   wallet: WalletDto;
   income: IncomeDto;
 }
+
+// ------------------------------------------------------------ leaderboard
+
+/** all = land income now; month = coins collected this month; near = land income around you. */
+export type LeaderboardScope = 'all' | 'month' | 'near';
+
+export interface LeaderboardEntry {
+  rank: number;
+  userId: string;
+  displayName: string;
+  plots: number;
+  incomePerHour: number;
+  /** What the board is ranked by (income/h, or coins collected this month). */
+  score: number;
+}
+
+export interface LeaderboardResponse {
+  scope: LeaderboardScope;
+  entries: LeaderboardEntry[];
+  /** You, if you're on the board at all (also when outside the top). */
+  me: LeaderboardEntry | null;
+  /** Gems for 1st, 2nd, … at the end of the month. */
+  monthlyPrizeGems: number[];
+  monthEndsAt: string;
+  /** Last month's prize winners. */
+  lastWinners: { rank: number; displayName: string; gems: number }[];
+}

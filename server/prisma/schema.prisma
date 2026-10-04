@@ -259,3 +259,17 @@ model Favourite {
   @@id([userId, row, col])
   @@map("favourites")
 }
+
+/// Gems paid to the month's top players (rank 0 with no user = "month done,
+/// nobody qualified"). The primary key makes paying a month twice impossible.
+model LeaderboardPrize {
+  month     String
+  rank      Int
+  userId    String?  @map("user_id") @db.Uuid
+  gems      Int      @default(0)
+  score     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([month, rank])
+  @@map("leaderboard_prizes")
+}
