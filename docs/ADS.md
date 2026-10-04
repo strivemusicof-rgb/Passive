@@ -8,8 +8,8 @@ Players can watch a video ad to:
 Limits (in the `ads` economy settings): 20 ads a day, 30 s between ads. Ad ⭐
 don't count towards the free-play daily limit, because each ad pays us.
 
-Right now the app uses **Google's test ads**: they look real but earn nothing.
-To earn money, set up AdMob as below and ship a new build.
+The real AdMob **App ID** is in `app/app.json`. Until the rewarded **ad unit
+ID** is added too, the app shows Google's test ads (they earn nothing).
 
 ## 1. Create the AdMob app (once)
 
