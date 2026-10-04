@@ -8,8 +8,9 @@ Players can watch a video ad to:
 Limits (in the `ads` economy settings): 20 ads a day, 30 s between ads. Ad ⭐
 don't count towards the free-play daily limit, because each ad pays us.
 
-The real AdMob **App ID** is in `app/app.json`. Until the rewarded **ad unit
-ID** is added too, the app shows Google's test ads (they earn nothing).
+The real AdMob App ID and rewarded ad unit ID are in `app/app.json`, so
+TestFlight and App Store builds show **real ads**. Development builds always
+show Google's test ads.
 
 ## 1. Create the AdMob app (once)
 

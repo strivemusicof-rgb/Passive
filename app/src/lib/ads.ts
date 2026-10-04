@@ -2,8 +2,12 @@ import Constants from 'expo-constants';
 import { getTrackingPermissionsAsync, requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import mobileAds, { AdEventType, AdsConsent, RewardedAd, RewardedAdEventType, TestIds } from 'react-native-google-mobile-ads';
 
-/** Rewarded ad unit from app.json (extra.admob.iosRewarded); Google's test unit until it's set. */
-const UNIT_ID: string = Constants.expoConfig?.extra?.admob?.iosRewarded || TestIds.REWARDED;
+/**
+ * Rewarded ad unit from app.json (extra.admob.iosRewarded). Development builds
+ * always use Google's test unit: watching your own real ads can get the AdMob
+ * account blocked.
+ */
+const UNIT_ID: string = (!__DEV__ && Constants.expoConfig?.extra?.admob?.iosRewarded) || TestIds.REWARDED;
 const LOAD_TIMEOUT_MS = 20_000;
 
 let ready: Promise<boolean> | null = null;
