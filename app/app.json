@@ -6,9 +6,12 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "landrush",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "lv.landrush.app",
+      "appleTeamId": "EYFA6K2Q5Y",
+      "supportsTablet": false
     },
     "plugins": [
       "expo-router",
@@ -25,6 +28,7 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "backgroundColor": "#070D0B"
   }
 }

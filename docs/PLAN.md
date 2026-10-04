@@ -17,7 +17,7 @@ Repo: `strivemusicof-rgb/Passive` (empty right now, cloned at `/home/user/passiv
 
 | Topic | Document says | Change | Why |
 |---|---|---|---|
-| Land grid | "plots based on coordinates" | **H3 hexagons** (Uber's free library, `h3-js`, runs on the server). Resolution 11 (about 25 m edges, roughly the size of a building). We test res 10 vs 11 on the real map in M2 and lock it before launch. | Every place on Earth already has a plot ID, so **plots don't need to be stored until someone buys them**. Hexagons also make "connected plots" (districts) simple. |
+| Land grid | "plots based on coordinates" | **Square grid** (~33 m plots, matches the design mockup). Grid math lives in `shared/src/grid.ts`, used by app and server. | Every place on Earth already has a plot ID, so **plots don't need to be stored until someone buys them**. |
 | Rarity | stored per plot | **Calculated from the plot ID** (hash of ID + secret seed), plus admin-defined **hotspots** (Old Town, Jūrmala beach, Freedom Monument) that raise the odds of rarer plots | Nothing needs to be generated for the whole world, and famous places feel special. |
 | Income collection | collect each plot | **One "Collect all" button + a storage limit** (8 h at the start, upgradeable) | Short sessions, and "your storage is full!" is the push notification that brings players back. |
 | Coin sinks | not covered | Each new plot costs a bit more than the last (soft cap), upgrades, 5% market fee, cosmetic name/skin changes | Without ways to spend coins, prices inflate and the economy breaks within weeks. |
@@ -45,14 +45,19 @@ Repo: `strivemusicof-rgb/Passive` (empty right now, cloned at `/home/user/passiv
 
 ---
 
+### Design (approved mockup, 12 screens)
+The UI follows the user's mockup: dark green theme, rarity colours, isometric plot/building art drawn in code (SVG, swappable for PNG art later), Apple Maps satellite view.
+Added to scope from the mockup: **gems** (second, premium currency), **email login + play as guest**, **weekly missions + achievements**, **marketplace favourites**.
+iOS app ID: bundle `lv.landrush.app`, team `EYFA6K2Q5Y`.
+
 ## 2. Architecture
 
 ```
 iPhone (Expo app) ──HTTPS──► Nginx (VPS) ──► NestJS API (Docker) ──► PostgreSQL (Docker)
                                                      │
-                                       h3-js grid + economy config in database
+                                       square grid (shared) + economy config in database
 ```
-It runs on the user's existing OVH VPS next to PocketBase, through Docker Compose, on its own subdomain (e.g. `api.<domain>`). The server sends the hexagon shapes to the app, so the iPhone app doesn't need `h3-js` (it can be unreliable on React Native).
+It runs on the user's existing OVH VPS next to PocketBase, through Docker Compose, on its own subdomain (e.g. `api.<domain>`). The grid math is shared, so the app draws plot squares itself and only asks the server who owns them.
 
 ### Repo layout (pnpm monorepo)
 ```
@@ -69,7 +74,7 @@ It runs on the user's existing OVH VPS next to PocketBase, through Docker Compos
 - All economy numbers live in an `economy_config` table, so balance can change **without a new iOS build**.
 
 ### Database (Prisma schema)
-`users`, `wallets`, `transactions` (ledger), `plots` (only bought plots: `h3_index` PK, owner, building level, name), `listings`, `missions`, `user_missions`, `check_ins`, `hotspots`, `economy_config`, `audit_log`. (`iap_transactions` and `leaderboard_entries` come in later phases.)
+`users`, `wallets`, `transactions` (ledger), `plots` (only bought plots: `row`+`col` PK, owner, building level, name), `listings`, `missions`, `user_missions`, `check_ins`, `hotspots`, `economy_config`, `audit_log`. (`iap_transactions` and `leaderboard_entries` come in later phases.)
 
 ### App screens (MVP)
 Loading → Sign in → Tutorial (claim starter plot → collect → upgrade) → **Map** (hexes for owned / free / for-sale plots, balance, income/h, Collect button) → Plot sheet (buy / build / list / name) → My Lands → Marketplace → Missions → Profile → Settings (language LV/RU/EN, notifications, delete account).
@@ -82,8 +87,9 @@ Map: `react-native-maps` (Apple Maps, free). Only plots inside the visible area 
 | # | Milestone | Contents |
 |---|---|---|
 | M0 ✅ | Foundation | Monorepo, Expo app skeleton + tabs + LV/RU/EN i18n, NestJS + Prisma + Postgres via Docker Compose, health endpoint, CLAUDE.md, CI (lint + tests) |
-| M1 | Accounts | Sign in with Apple (server checks Apple's token), JWT access/refresh, `/me`, developer login, account deletion |
-| M2 | Map + plots | H3 grid service, `GET /map/plots?bbox`, rarity + hotspots, starter plot from GPS, plot sheet, buy plot |
+| UI ✅ | Mockup screens | All 12 mockup screens + Shop/More/Settings, built with mock data (`app/src/mock/data.ts`) |
+| M1 | Accounts | Sign in with Apple (server checks Apple's token), email login, guest accounts (linkable later), JWT access/refresh, `/me`, account deletion |
+| M2 | Map + plots | Square grid service, `GET /map/plots?bbox`, rarity + hotspots, starter plot from GPS, plot sheet, buy plot |
 | M3 | Economy | Wallet + ledger, buildings 0–4 (Empty→Tower) from config, upgrade, collect all + storage cap, neighbour bonus |
 | M4 | Retention | Daily missions, 7-day login streak, XP/levels, check-in bonus, local push "storage full" |
 | M5 | Marketplace | List / cancel / buy (atomic), 5% fee, price limits, history, My Lands |

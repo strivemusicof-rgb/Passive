@@ -6,3 +6,8 @@ coverage/
 .env.*
 !.env.example
 .DS_Store
+
+# Apple keys and certificates must never be committed
+*.p8
+*.p12
+*.mobileprovision
