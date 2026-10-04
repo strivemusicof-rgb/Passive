@@ -2,7 +2,7 @@
 
 iOS game: buy virtual land on a real-world map, build on it, earn passive coins, trade plots with other players.
 
-See [`docs/PLAN.md`](docs/PLAN.md) for the full plan and milestones.
+See [`docs/PLAN.md`](docs/PLAN.md) for the full plan and milestones, and [`docs/TESTFLIGHT.md`](docs/TESTFLIGHT.md) to put the server on the VPS and ship a TestFlight build.
 
 ## Repo layout
 

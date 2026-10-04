@@ -1,0 +1,10 @@
+# Keep secrets, backups and local build output out of the server image.
+.git
+**/node_modules
+**/dist
+**/.expo
+server/src/generated
+server/.env
+deploy/.env
+deploy/backups
+*.p8
