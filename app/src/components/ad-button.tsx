@@ -42,9 +42,13 @@ export function AdButton({ placement, style }: { placement: AdPlacement; style?:
     setBusy(true);
     setMessage(null);
     try {
-      const res = await game.watchAd(placement, user.id);
-      if (!res) setMessage({ text: t('ads.closed'), error: true });
-      else if (res.status === 'pending') setMessage({ text: t('ads.pending') });
+      const out = await game.watchAd(placement, user.id);
+      const res = out.reward;
+      if (!res) {
+        const why = 'closed' in out && out.closed ? t('ads.closed') : t('ads.unavailable');
+        const reason = 'reason' in out && out.reason ? ` (${out.reason})` : '';
+        setMessage({ text: `${why}${reason}`, error: true });
+      } else if (res.status === 'pending') setMessage({ text: t('ads.pending') });
       else
         setMessage({
           text:
@@ -56,7 +60,7 @@ export function AdButton({ placement, style }: { placement: AdPlacement; style?:
       setMessage({ text: errorMessage(t, e), error: true });
     } finally {
       setBusy(false);
-      setTimeout(() => setMessage(null), 3000);
+      setTimeout(() => setMessage(null), 6000);
     }
   };
 

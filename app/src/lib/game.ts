@@ -167,14 +167,17 @@ export const game = {
   /**
    * Shows a rewarded ad and returns the reward. Google confirms the view to
    * our server separately, which can take a few seconds: ask until it's in.
-   * Returns null if the ad didn't play or was closed early.
+   * Without a reward, says whether the ad was closed early or couldn't load.
    */
-  watchAd: async (placement: AdPlacement, userId: string): Promise<AdRewardResponse | null> => {
+  watchAd: async (
+    placement: AdPlacement,
+    userId: string,
+  ): Promise<{ reward: AdRewardResponse } | { reward: null; closed: boolean; reason?: string }> => {
     const { id } = await api.startAd(placement);
-    const result = await showRewardedAd(userId, id);
-    if (result !== 'earned') {
+    const ad = await showRewardedAd(userId, id);
+    if (ad.result !== 'earned') {
       game.loadAds();
-      return null;
+      return { reward: null, closed: ad.result === 'closed', reason: ad.reason };
     }
     let res = await api.completeAd(id);
     for (let i = 0; i < 8 && res.status === 'pending'; i++) {
@@ -183,7 +186,7 @@ export const game = {
     }
     set({ wallet: res.wallet, ads: res.ads });
     if (res.points > 0) api.rewards().then((rewards) => set({ rewards })).catch(() => {});
-    return res;
+    return { reward: res };
   },
   /** Forget everything (sign out / account deleted). */
   reset: () => {
