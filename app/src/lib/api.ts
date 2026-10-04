@@ -1,4 +1,9 @@
 import type {
+  ListingDto,
+  MarketBuyResponse,
+  MarketResponse,
+  MarketSort,
+  MyMarketResponse,
   AdPlacement,
   AdRewardResponse,
   AdsDto,
@@ -123,4 +128,18 @@ export const api = {
   ads: () => request<AdsDto>('GET', '/ads'),
   startAd: (placement: AdPlacement) => request<{ id: string }>('POST', '/ads/start', { placement }),
   completeAd: (id: string) => request<AdRewardResponse>('POST', `/ads/${id}/complete`),
+  market: (q: { sort?: MarketSort; q?: string; favourites?: boolean }) => {
+    const params = new URLSearchParams();
+    if (q.sort) params.set('sort', q.sort);
+    if (q.q) params.set('q', q.q);
+    if (q.favourites) params.set('favourites', '1');
+    return request<MarketResponse>('GET', `/market?${params.toString()}`);
+  },
+  myMarket: () => request<MyMarketResponse>('GET', '/market/mine'),
+  listPlot: (key: string, price: number) =>
+    request<ListingDto>('POST', `/plots/${encodeURIComponent(key)}/list`, { price }),
+  cancelListing: (id: string) => request<ListingDto>('POST', `/market/${id}/cancel`),
+  buyListing: (id: string) => request<MarketBuyResponse>('POST', `/market/${id}/buy`),
+  favourite: (key: string, on: boolean) =>
+    request<{ favourite: boolean }>(on ? 'PUT' : 'DELETE', `/plots/${encodeURIComponent(key)}/favourite`),
 };

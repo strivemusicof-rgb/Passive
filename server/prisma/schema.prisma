@@ -51,6 +51,9 @@ model User {
   checkIns     CheckIn[]
   cashouts     CashoutRequest[]
   adViews      AdView[]
+  sales        Listing[] @relation("sales")
+  purchases    Listing[] @relation("purchases")
+  favourites   Favourite[]
 
   @@map("users")
 }
@@ -124,6 +127,7 @@ model Plot {
   collectedAt   DateTime @default(now()) @map("collected_at")
   acquiredAt    DateTime @default(now()) @map("acquired_at")
   createdAt     DateTime @default(now()) @map("created_at")
+  listings      Listing[]
 
   @@id([row, col])
   @@index([ownerId])
@@ -211,4 +215,47 @@ model AdView {
   @@unique([placement, ref])
   @@index([userId, createdAt])
   @@map("ad_views")
+}
+
+enum ListingStatus {
+  active
+  sold
+  cancelled
+}
+
+/// A plot for sale on the marketplace. At most one active listing per plot
+/// (partial unique index in the migration).
+model Listing {
+  id        String        @id @default(uuid()) @db.Uuid
+  row       Int
+  col       Int
+  plot      Plot          @relation(fields: [row, col], references: [row, col], onDelete: Cascade)
+  sellerId  String        @map("seller_id") @db.Uuid
+  seller    User          @relation("sales", fields: [sellerId], references: [id], onDelete: Cascade)
+  price     Int
+  /// Coins the market kept (set when sold)
+  fee       Int           @default(0)
+  status    ListingStatus @default(active)
+  buyerId   String?       @map("buyer_id") @db.Uuid
+  buyer     User?         @relation("purchases", fields: [buyerId], references: [id], onDelete: SetNull)
+  createdAt DateTime      @default(now()) @map("created_at")
+  closedAt  DateTime?     @map("closed_at")
+
+  @@index([status, createdAt])
+  @@index([sellerId])
+  @@index([buyerId, closedAt])
+  @@index([row, col])
+  @@map("listings")
+}
+
+/// A plot the player marked with a heart.
+model Favourite {
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  row       Int
+  col       Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([userId, row, col])
+  @@map("favourites")
 }

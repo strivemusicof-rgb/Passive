@@ -38,6 +38,7 @@ const toCell = (p: PlotDto): MapCell => ({
   mine: p.mine,
   owned: !!p.owner,
   buildingLevel: p.buildingLevel,
+  forSale: !!p.listing,
 });
 
 /** 4. Home / map. */

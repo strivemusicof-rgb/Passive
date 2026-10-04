@@ -37,7 +37,7 @@ export async function createTestApp(): Promise<{ app: INestApplication; signAppl
     .compile();
   const app = moduleRef.createNestApplication();
   await app.init();
-  await app.get(PrismaService).$executeRawUnsafe('TRUNCATE users, sessions, wallets, transactions, plots, mission_progress, check_ins, cashout_requests, ad_views, economy_config CASCADE');
+  await app.get(PrismaService).$executeRawUnsafe('TRUNCATE users, sessions, wallets, transactions, plots, mission_progress, check_ins, cashout_requests, ad_views, listings, favourites, economy_config CASCADE');
   app.get(EconomyService).invalidate();
   return { app, signApple: sign };
 }

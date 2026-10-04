@@ -143,6 +143,24 @@ export const game = {
     const rewards = await api.cashout(method, destination);
     set({ rewards, wallet: state.wallet ? { ...state.wallet, points: rewards.points } : state.wallet });
   },
+  /** Buy a plot from another player. */
+  buyListing: async (id: string) => {
+    const res = await api.buyListing(id);
+    set({ wallet: res.wallet, myPlots: withPlot(res.plot), income: res.income, incomeAt: Date.now(), version: state.version + 1 });
+    api.myPlots().then((myPlots) => set({ myPlots })).catch(() => {});
+    refreshProgress();
+    return res.plot;
+  },
+  listPlot: async (key: string, price: number) => {
+    const listing = await api.listPlot(key, price);
+    set({ myPlots: withPlot(listing.plot), version: state.version + 1 });
+    return listing;
+  },
+  cancelListing: async (id: string) => {
+    const listing = await api.cancelListing(id);
+    set({ myPlots: withPlot(listing.plot), version: state.version + 1 });
+    return listing;
+  },
   loadAds: () => {
     api.ads().then((ads) => set({ ads })).catch(() => {});
   },

@@ -18,6 +18,8 @@ export type MapCell = {
   mine: boolean;
   owned: boolean;
   buildingLevel: number;
+  /** On sale on the marketplace: the icon turns gold. */
+  forSale?: boolean;
 };
 export type LatLng = { lat: number; lng: number };
 export type GameMapHandle = { moveTo: (at: LatLng) => void };
@@ -161,7 +163,7 @@ export const GameMap = forwardRef<GameMapHandle, GameMapProps>(function GameMap(
               <MaterialCommunityIcons
                 name={BUILDING_ICONS[c.buildingLevel] ?? 'pine-tree'}
                 size={delta < 0.005 ? 22 : 16}
-                color="rgba(255,255,255,0.9)"
+                color={c.forSale ? C_LANDMARK : 'rgba(255,255,255,0.9)'}
                 style={styles.iconShadow}
               />
             </Marker>

@@ -6,6 +6,8 @@ import { AdminController } from '../admin/admin.controller.js';
 import { AdmobVerifier } from '../ads/admob.verifier.js';
 import { AdsController } from '../ads/ads.controller.js';
 import { AdsService } from '../ads/ads.service.js';
+import { MarketController } from '../market/market.controller.js';
+import { MarketService } from '../market/market.service.js';
 import { ProgressController } from '../progress/progress.controller.js';
 import { ProgressService } from '../progress/progress.service.js';
 import { TrackerService } from '../progress/tracker.service.js';
@@ -16,7 +18,7 @@ import { PlotsController } from './plots.controller.js';
 import { PlotsService } from './plots.service.js';
 
 @Module({
-  controllers: [PlotsController, ProgressController, RewardsController, AdminController, AdsController],
-  providers: [PlotsService, WalletService, EconomyService, IncomeService, TrackerService, ProgressService, RewardsService, AdsService, AdmobVerifier],
+  controllers: [PlotsController, ProgressController, RewardsController, AdminController, AdsController, MarketController],
+  providers: [PlotsService, WalletService, EconomyService, IncomeService, TrackerService, ProgressService, RewardsService, AdsService, AdmobVerifier, MarketService],
 })
 export class PlotsModule {}

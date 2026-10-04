@@ -87,6 +87,10 @@ export interface PlotDto {
   /** What it costs the viewer to buy it now; null if it's owned. */
   price: number | null;
   name: string | null;
+  /** On sale on the marketplace (owned plots only). */
+  listing: { id: string; price: number } | null;
+  /** Your own plots: what it's worth and the allowed listing price range. */
+  sale: { value: number; min: number; max: number; feeRate: number } | null;
 }
 
 export interface MapPlotsResponse {
@@ -250,4 +254,44 @@ export interface AdRewardResponse {
   points: number;
   wallet: WalletDto;
   ads: AdsDto;
+}
+
+// ------------------------------------------------------------ marketplace
+
+export type ListingStatus = 'active' | 'sold' | 'cancelled';
+
+export interface ListingDto {
+  id: string;
+  price: number;
+  /** Coins the market kept (sold listings). */
+  fee: number;
+  status: ListingStatus;
+  createdAt: string;
+  closedAt: string | null;
+  seller: { id: string; displayName: string };
+  buyer: { id: string; displayName: string } | null;
+  mine: boolean;
+  favourite: boolean;
+  plot: PlotDto;
+}
+
+export type MarketSort = 'newest' | 'cheapest' | 'income' | 'rarity';
+
+/** GET /market */
+export interface MarketResponse {
+  listings: ListingDto[];
+  feeRate: number;
+}
+
+/** GET /market/mine: your listings, then your recent sales and purchases. */
+export interface MyMarketResponse {
+  active: ListingDto[];
+  history: ListingDto[];
+}
+
+/** POST /market/:id/buy */
+export interface MarketBuyResponse {
+  plot: PlotDto;
+  wallet: WalletDto;
+  income: IncomeDto;
 }

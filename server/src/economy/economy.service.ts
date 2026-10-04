@@ -115,6 +115,20 @@ export const ECONOMY_DEFAULTS = {
     /** Watch for a small bonus. */
     bonus: { coins: 100, points: 5 },
   },
+  /**
+   * Player-to-player plot trading. Prices must stay within min…max × the
+   * plot's value (stops coins being moved between a player's own accounts);
+   * the fee leaves the game (coin sink).
+   */
+  market: {
+    feeRate: 0.05,
+    minPriceFactor: 0.5,
+    maxPriceFactor: 20,
+    /** Account age before you can list a plot. */
+    minAccountAgeDays: 2,
+    maxActiveListings: 20,
+    maxBuysPerDay: 10,
+  },
   /** Landmarks where buying gives better rarity odds. */
   hotspots: [
     { name: 'Riga Old Town', lat: 56.9488, lng: 24.1064, radiusM: 700, boost: 1.0 },

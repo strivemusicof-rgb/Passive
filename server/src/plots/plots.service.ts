@@ -4,15 +4,18 @@ import { cellAt, cellCenter, cellKey, cellsInBox, neighbours, type Cell, type Ce
 
 import { EconomyService, type Economy } from '../economy/economy.service.js';
 import { plotIncomePerDay } from '../economy/income.js';
-import { hotspotBoost, plotPrice, rarityOdds, rollRarity } from '../economy/rarity.js';
+import { hotspotBoost, plotPrice, plotValue, priceRange, rarityOdds, rollRarity } from '../economy/rarity.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { IncomeService, ownedNeighbours } from '../income/income.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { TrackerService } from '../progress/tracker.service.js';
 import { WalletService, type Tx } from '../wallet/wallet.service.js';
 
-const withOwner = { owner: { select: { id: true, displayName: true } } } as const;
-type OwnedRow = Prisma.PlotGetPayload<{ include: typeof withOwner }>;
+export const withOwner = {
+  owner: { select: { id: true, displayName: true } },
+  listings: { where: { status: 'active' }, select: { id: true, price: true }, take: 1 },
+} as const;
+export type OwnedRow = Prisma.PlotGetPayload<{ include: typeof withOwner }>;
 
 /** Free cells are listed only for small areas (zoomed-in map). */
 const MAX_FREE_CELLS = 900;
@@ -165,7 +168,7 @@ export class PlotsService {
     }
   }
 
-  private async neighbourCount(db: Tx, plot: { row: number; col: number; ownerId: string }): Promise<number> {
+  async neighbourCount(db: Tx, plot: { row: number; col: number; ownerId: string }): Promise<number> {
     return db.plot.count({
       where: { ownerId: plot.ownerId, OR: neighbours(plot).map((n) => ({ row: n.row, col: n.col })) },
     });
@@ -189,7 +192,7 @@ export class PlotsService {
     });
   }
 
-  private ownedDto(p: OwnedRow, viewerId: string, economy: Economy, neighbourCount: number): PlotDto {
+  ownedDto(p: OwnedRow, viewerId: string, economy: Economy, neighbourCount: number): PlotDto {
     const { lat, lng } = cellCenter(p);
     const rarity = p.rarity as Rarity;
     const mine = p.ownerId === viewerId;
@@ -219,6 +222,8 @@ export class PlotsService {
           : null,
       price: null,
       name: p.name,
+      listing: p.listings[0] ?? null,
+      sale: mine ? { value: plotValue(rarity, p.buildingLevel, economy), ...priceRange(plotValue(rarity, p.buildingLevel, economy), economy), feeRate: economy.market.feeRate } : null,
     };
   }
 
@@ -242,6 +247,8 @@ export class PlotsService {
       nextLevel: null,
       price: plotPrice(ownedCount, economy),
       name: null,
+      listing: null,
+      sale: null,
     };
   }
 }

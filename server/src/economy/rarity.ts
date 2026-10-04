@@ -62,3 +62,24 @@ export function plotPrice(ownedCount: number, economy: Pick<Economy, 'plotBasePr
 export function plotIncome(rarity: Rarity, buildingLevel: number, economy: Pick<Economy, 'rarityIncome' | 'buildingIncome'>) {
   return economy.rarityIncome[rarity] + (economy.buildingIncome[buildingLevel] ?? 0);
 }
+
+/**
+ * What a plot is worth, for marketplace price limits: about three days of its
+ * land income plus what its buildings cost.
+ */
+export function plotValue(
+  rarity: Rarity,
+  buildingLevel: number,
+  economy: Pick<Economy, 'rarityIncome' | 'buildingCost'>,
+): number {
+  let value = economy.rarityIncome[rarity] * 3;
+  for (let level = 1; level <= buildingLevel; level++) value += economy.buildingCost[level] ?? 0;
+  return value;
+}
+
+export function priceRange(value: number, economy: Pick<Economy, 'market'>) {
+  return {
+    min: Math.max(1, Math.ceil(value * economy.market.minPriceFactor)),
+    max: Math.floor(value * economy.market.maxPriceFactor),
+  };
+}

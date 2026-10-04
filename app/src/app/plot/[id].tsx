@@ -18,6 +18,7 @@ import { Text } from '@/components/ui/text';
 import { C, R, RARITY_COLORS, S } from '@/constants/theme';
 import { errorMessage } from '@/lib/error-message';
 import { game, useGame } from '@/lib/game';
+import { confirm } from '@/lib/confirm';
 import { currentPosition } from '@/lib/location';
 import { usePlot } from '@/lib/use-plot';
 
@@ -67,6 +68,27 @@ export default function PlotRoute() {
     }
   };
 
+  /** Buy it from the player selling it on the marketplace. */
+  const buyListing = async () => {
+    if (!plot.listing) return;
+    const ok = await confirm(
+      t('market.confirmTitle', { id: plot.number }),
+      t('market.confirmBody', { price: formatNumber(plot.listing.price) }),
+      t('common.buy'),
+      t('account.cancel'),
+    );
+    if (!ok) return;
+    setBuying(true);
+    setBuyError(null);
+    try {
+      setPlot(await game.buyListing(plot.listing.id));
+    } catch (e) {
+      setBuyError(errorMessage(t, e));
+    } finally {
+      setBuying(false);
+    }
+  };
+
   /** Bonus for standing at your own plot (the server checks the distance). */
   const doCheckIn = async () => {
     setCheckIn({ busy: true });
@@ -105,8 +127,24 @@ export default function PlotRoute() {
       )}
       <Button
         variant="outline"
-        title={t('plot.sell')}
+        title={plot.listing ? t('plot.onSale', { price: formatNumber(plot.listing.price) }) : t('plot.sell')}
         onPress={() => router.push(`/sell/${plot.key}`)}
+      />
+    </>
+  ) : plot.listing ? (
+    <>
+      {buyError && (
+        <Text variant="small" color={C.danger} center>
+          {buyError}
+        </Text>
+      )}
+      <Text variant="small" color={C.textSecondary} center>
+        {t('plot.forSaleBy', { name: plot.owner?.displayName ?? '' })}
+      </Text>
+      <Button
+        title={t('plot.buyListing', { price: formatNumber(plot.listing.price) })}
+        onPress={buyListing}
+        disabled={buying || (wallet != null && wallet.coins < plot.listing.price)}
       />
     </>
   ) : isFree ? (

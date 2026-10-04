@@ -124,7 +124,7 @@ export const GameMap = forwardRef<GameMapHandle, GameMapProps>(function GameMap(
               <MaterialCommunityIcons
                 name={BUILDING_ICONS[c.buildingLevel] ?? 'pine-tree'}
                 size={w * 0.45}
-                color="rgba(255,255,255,0.9)"
+                color={c.forSale ? C_LANDMARK : 'rgba(255,255,255,0.9)'}
               />
             )}
             {selected && (
