@@ -12,26 +12,31 @@ import { EarthBackground } from '@/components/art/backgrounds';
 import { Logo } from '@/components/art/logo';
 import { Text } from '@/components/ui/text';
 import { C, S } from '@/constants/theme';
-import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 
-/** 1. Splash / loading: checks the server, then goes to login. */
+/** 1. Splash / loading: restores the saved login, then goes to the map or login. */
 export default function SplashRoute() {
   const { t } = useTranslation();
   const [progress, setProgress] = useState(0.1);
 
+  const { status } = useAuth();
+  const [minTimeDone, setMinTimeDone] = useState(false);
+
   useEffect(() => {
     SplashScreen.hideAsync();
     const timer = setInterval(() => setProgress((p) => Math.min(1, p + 0.06)), 80);
-    const health = api.health().catch(() => null);
-    const done = setTimeout(async () => {
-      await health;
-      router.replace('/login');
-    }, 1800);
+    const done = setTimeout(() => setMinTimeDone(true), 1500);
     return () => {
       clearInterval(timer);
       clearTimeout(done);
     };
   }, []);
+
+  // Leave once the saved login has been checked and the logo has been seen.
+  useEffect(() => {
+    if (!minTimeDone || status === 'loading') return;
+    router.replace(status === 'signedIn' ? '/map' : '/login');
+  }, [minTimeDone, status]);
 
   return (
     <View style={styles.root}>

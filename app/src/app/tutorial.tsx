@@ -29,11 +29,6 @@ export default function TutorialRoute() {
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.top}>
-        <Pressable onPress={finish} hitSlop={12} style={styles.skip}>
-          <Text variant="small" color={C.textSecondary}>
-            {t('common.skip')}
-          </Text>
-        </Pressable>
         <Text variant="smallBold" color={C.green} center>
           {t('tutorial.step', { step: step + 1, total: STEPS.length })}
         </Text>
@@ -43,6 +38,11 @@ export default function TutorialRoute() {
         <Text color="#DCE4E0" center style={styles.body}>
           {t(`tutorial.${current.key}Body`)}
         </Text>
+        <Pressable onPress={finish} hitSlop={12} style={styles.skip}>
+          <Text variant="small" color={C.textSecondary}>
+            {t('common.skip')}
+          </Text>
+        </Pressable>
       </View>
 
       <Pressable style={styles.art} onPress={next}>

@@ -12,11 +12,15 @@ import { Progress } from '@/components/ui/progress';
 import { Screen } from '@/components/ui/screen';
 import { Text } from '@/components/ui/text';
 import { C, S } from '@/constants/theme';
+import { useAuth } from '@/lib/auth';
 import { me } from '@/mock/data';
 
 /** 12. Profile. */
 export default function ProfileRoute() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const name = user?.displayName ?? me.name;
+  const level = user?.level ?? me.level;
   return (
     <Screen tabs>
       <Header
@@ -29,15 +33,15 @@ export default function ProfileRoute() {
       />
       <View style={styles.hero}>
         <View>
-          <Avatar name={me.name} size={92} ring={C.green} />
+          <Avatar name={name} size={92} ring={C.green} />
           <View style={styles.verified}>
             <Ionicons name="shield-checkmark" size={14} color="#fff" />
           </View>
         </View>
         <View style={styles.heroText}>
-          <Text variant="h2">{me.name}</Text>
+          <Text variant="h2">{name}</Text>
           <Text variant="small" color={C.textSecondary}>
-            {t('common.lv', { level: me.level })}
+            {t('common.lv', { level })}
           </Text>
           <Progress value={me.xp / me.xpNext} height={6} />
           <Text variant="tiny" color={C.textSecondary}>

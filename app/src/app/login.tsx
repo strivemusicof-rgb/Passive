@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CityBackground } from '@/components/art/backgrounds';
@@ -9,11 +10,44 @@ import { Logo } from '@/components/art/logo';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { C, S } from '@/constants/theme';
+import { appleIdentityToken, useAppleAvailable } from '@/lib/apple';
+import { useAuth } from '@/lib/auth';
+import { errorMessage } from '@/lib/error-message';
 
-/** 2. Login. Real auth arrives in M1; for now every option starts the tutorial. */
+/** After any sign-in: brand-new players see the tutorial, returning ones the map. */
+export function goAfterSignIn(isNew: boolean) {
+  router.replace(isNew ? '/tutorial' : '/map');
+}
+
+/** 2. Login: Apple, email or guest. */
 export default function LoginRoute() {
   const { t } = useTranslation();
-  const start = () => router.replace('/tutorial');
+  const auth = useAuth();
+  const appleAvailable = useAppleAvailable();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (auth.status === 'signedIn') goAfterSignIn(auth.isNewAccount);
+  }, [auth.status, auth.isNewAccount]);
+
+  const run = async (action: () => Promise<void>) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await action();
+    } catch (e) {
+      setError(errorMessage(t, e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const apple = () =>
+    run(async () => {
+      const token = await appleIdentityToken();
+      if (token) await auth.signInApple(token);
+    });
 
   return (
     <View style={styles.root}>
@@ -29,9 +63,35 @@ export default function LoginRoute() {
           <Text color="#DCE4E0" center style={styles.tagline}>
             {t('login.tagline')}
           </Text>
-          <Button variant="light" title={t('login.apple')} icon={<Ionicons name="logo-apple" size={20} color="#000" />} onPress={start} />
-          <Button variant="outline" title={t('login.email')} icon={<Ionicons name="mail" size={18} color={C.text} />} onPress={start} />
-          <Button variant="outline" title={t('login.guest')} icon={<Ionicons name="person" size={18} color={C.text} />} onPress={start} />
+          {appleAvailable && (
+            <Button
+              variant="light"
+              title={t('login.apple')}
+              icon={<Ionicons name="logo-apple" size={20} color="#000" />}
+              onPress={apple}
+              disabled={busy}
+            />
+          )}
+          <Button
+            variant="outline"
+            title={t('login.email')}
+            icon={<Ionicons name="mail" size={18} color={C.text} />}
+            onPress={() => router.push('/email')}
+            disabled={busy}
+          />
+          <Button
+            variant="outline"
+            title={t('login.guest')}
+            icon={<Ionicons name="person" size={18} color={C.text} />}
+            onPress={() => run(auth.signInGuest)}
+            disabled={busy}
+          />
+          {busy && <ActivityIndicator color={C.green} />}
+          {error && (
+            <Text variant="small" color={C.danger} center>
+              {error}
+            </Text>
+          )}
           <Text variant="tiny" color={C.textMuted} center style={styles.legal}>
             {t('login.legal')}
           </Text>

@@ -27,6 +27,8 @@ services:
       PORT: 3000
       DATABASE_URL: postgresql://landrush:${POSTGRES_PASSWORD}@db:5432/landrush
       MIN_APP_VERSION: ${MIN_APP_VERSION:-0.1.0}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in deploy/.env}
+      APPLE_BUNDLE_ID: lv.landrush.app
     # Only reachable from the VPS itself; Nginx handles HTTPS in front of it.
     ports:
       - '127.0.0.1:3100:3000'

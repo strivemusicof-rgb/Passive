@@ -88,7 +88,7 @@ Map: `react-native-maps` (Apple Maps, free). Only plots inside the visible area 
 |---|---|---|
 | M0 ✅ | Foundation | Monorepo, Expo app skeleton + tabs + LV/RU/EN i18n, NestJS + Prisma + Postgres via Docker Compose, health endpoint, CLAUDE.md, CI (lint + tests) |
 | UI ✅ | Mockup screens | All 12 mockup screens + Shop/More/Settings, built with mock data (`app/src/mock/data.ts`) |
-| M1 | Accounts | Sign in with Apple (server checks Apple's token), email login, guest accounts (linkable later), JWT access/refresh, `/me`, account deletion |
+| M1 ✅ | Accounts | Sign in with Apple (server verifies Apple's token), email + password, guest accounts (upgrade to Apple/email keeps progress), 15-min access JWT + rotating refresh tokens in the Keychain, `/me` GET/PATCH/DELETE, rate limits. **Later:** password reset (needs an email sender), revoking Apple tokens on account deletion (needs the Apple .p8 key on the server). |
 | M2 | Map + plots | Square grid service, `GET /map/plots?bbox`, rarity + hotspots, starter plot from GPS, plot sheet, buy plot |
 | M3 | Economy | Wallet + ledger, buildings 0–4 (Empty→Tower) from config, upgrade, collect all + storage cap, neighbour bonus |
 | M4 | Retention | Daily missions, 7-day login streak, XP/levels, check-in bonus, local push "storage full" |

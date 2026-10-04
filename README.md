@@ -30,4 +30,6 @@ cp app/.env.example app/.env
 pnpm app               # then open in Expo Go / a development build
 ```
 
-Checks: `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm --filter server test:e2e`.
+Checks: `pnpm typecheck`, `pnpm lint`, `pnpm test`, and
+`DATABASE_URL=postgresql://landrush:landrush@localhost:5432/landrush_test pnpm --filter server test:e2e`
+(e2e tests wipe tables, so they refuse to run unless the database name ends in `_test`).

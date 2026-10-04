@@ -12,6 +12,7 @@ import { Amount } from '@/components/ui/currency';
 import { Progress } from '@/components/ui/progress';
 import { Text } from '@/components/ui/text';
 import { C, R, S, TAB_BAR_HEIGHT } from '@/constants/theme';
+import { useAuth } from '@/lib/auth';
 import { mapPlots, me } from '@/mock/data';
 
 const RIGA = { lat: 56.9496, lng: 24.1052 };
@@ -23,6 +24,7 @@ export default function MapRoute() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const map = useRef<GameMapHandle>(null);
+  const { user } = useAuth();
 
   return (
     <View style={styles.root}>
@@ -31,9 +33,9 @@ export default function MapRoute() {
       {/* Top bar: level, coins, gems */}
       <View style={[styles.topBar, { paddingTop: insets.top + S.xs }]}>
         <Pressable style={styles.level} onPress={() => router.push('/profile')}>
-          <Avatar name={me.name} size={38} ring={C.green} />
+          <Avatar name={user?.displayName ?? me.name} size={38} ring={C.green} />
           <View style={styles.levelText}>
-            <Text variant="smallBold">{t('common.lv', { level: me.level })}</Text>
+            <Text variant="smallBold">{t('common.lv', { level: user?.level ?? me.level })}</Text>
             <Progress value={me.xp / me.xpNext} height={4} />
           </View>
         </Pressable>
