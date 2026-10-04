@@ -1,5 +1,8 @@
 import type {
   AchievementDto,
+  AdPlacement,
+  AdRewardResponse,
+  AdsDto,
   DailyRewardDto,
   IncomeDto,
   MissionsResponse,
@@ -10,6 +13,7 @@ import type {
 } from '@landrush/shared';
 import { useEffect, useSyncExternalStore } from 'react';
 
+import { showRewardedAd } from './ads';
 import { api } from './api';
 import { auth } from './auth';
 import { scheduleStorageFull } from './notifications';
@@ -25,6 +29,7 @@ type State = {
   daily: DailyRewardDto | null;
   achievements: AchievementDto[] | null;
   rewards: RewardsDto | null;
+  ads: AdsDto | null;
   /** Bumped after any change to plots, so the map knows to reload. */
   version: number;
 };
@@ -38,6 +43,7 @@ const EMPTY: State = {
   daily: null,
   achievements: null,
   rewards: null,
+  ads: null,
   version: 0,
 };
 let state: State = EMPTY;
@@ -88,6 +94,7 @@ export const game = {
         set({ wallet, myPlots, income, incomeAt: Date.now(), missions, daily });
         api.achievements().then((achievements) => set({ achievements })).catch(() => {});
         api.rewards().then((rewards) => set({ rewards })).catch(() => {});
+        game.loadAds();
       } finally {
         loading = null;
       }
@@ -108,7 +115,10 @@ export const game = {
   collect: async () => {
     const res = await api.collect();
     set({ wallet: res.wallet, income: res.income, incomeAt: Date.now() });
-    if (res.collected > 0) refreshProgress();
+    if (res.collected > 0) {
+      refreshProgress();
+      game.loadAds();
+    }
     return res;
   },
   upgrade: async (key: string) => {
@@ -132,6 +142,30 @@ export const game = {
   cashout: async (method: string, destination: string) => {
     const rewards = await api.cashout(method, destination);
     set({ rewards, wallet: state.wallet ? { ...state.wallet, points: rewards.points } : state.wallet });
+  },
+  loadAds: () => {
+    api.ads().then((ads) => set({ ads })).catch(() => {});
+  },
+  /**
+   * Shows a rewarded ad and returns the reward. Google confirms the view to
+   * our server separately, which can take a few seconds: ask until it's in.
+   * Returns null if the ad didn't play or was closed early.
+   */
+  watchAd: async (placement: AdPlacement, userId: string): Promise<AdRewardResponse | null> => {
+    const { id } = await api.startAd(placement);
+    const result = await showRewardedAd(userId, id);
+    if (result !== 'earned') {
+      game.loadAds();
+      return null;
+    }
+    let res = await api.completeAd(id);
+    for (let i = 0; i < 8 && res.status === 'pending'; i++) {
+      await new Promise((r) => setTimeout(r, 1500));
+      res = await api.completeAd(id);
+    }
+    set({ wallet: res.wallet, ads: res.ads });
+    if (res.points > 0) api.rewards().then((rewards) => set({ rewards })).catch(() => {});
+    return res;
   },
   /** Forget everything (sign out / account deleted). */
   reset: () => {

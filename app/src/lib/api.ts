@@ -1,4 +1,7 @@
 import type {
+  AdPlacement,
+  AdRewardResponse,
+  AdsDto,
   ApiErrorCode,
   AchievementDto,
   AuthResponse,
@@ -117,4 +120,7 @@ export const api = {
   rewards: () => request<RewardsDto>('GET', '/rewards'),
   cashout: (method: string, destination: string) =>
     request<RewardsDto>('POST', '/rewards/cashout', { method, destination }),
+  ads: () => request<AdsDto>('GET', '/ads'),
+  startAd: (placement: AdPlacement) => request<{ id: string }>('POST', '/ads/start', { placement }),
+  completeAd: (id: string) => request<AdRewardResponse>('POST', `/ads/${id}/complete`),
 };

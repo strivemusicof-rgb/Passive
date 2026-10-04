@@ -3,6 +3,9 @@ import { Module } from '@nestjs/common';
 import { EconomyService } from '../economy/economy.service.js';
 import { IncomeService } from '../income/income.service.js';
 import { AdminController } from '../admin/admin.controller.js';
+import { AdmobVerifier } from '../ads/admob.verifier.js';
+import { AdsController } from '../ads/ads.controller.js';
+import { AdsService } from '../ads/ads.service.js';
 import { ProgressController } from '../progress/progress.controller.js';
 import { ProgressService } from '../progress/progress.service.js';
 import { TrackerService } from '../progress/tracker.service.js';
@@ -13,7 +16,7 @@ import { PlotsController } from './plots.controller.js';
 import { PlotsService } from './plots.service.js';
 
 @Module({
-  controllers: [PlotsController, ProgressController, RewardsController, AdminController],
-  providers: [PlotsService, WalletService, EconomyService, IncomeService, TrackerService, ProgressService, RewardsService],
+  controllers: [PlotsController, ProgressController, RewardsController, AdminController, AdsController],
+  providers: [PlotsService, WalletService, EconomyService, IncomeService, TrackerService, ProgressService, RewardsService, AdsService, AdmobVerifier],
 })
 export class PlotsModule {}

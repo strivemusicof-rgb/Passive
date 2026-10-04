@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { AdButton } from '@/components/ad-button';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { formatNumber, PointsIcon } from '@/components/ui/currency';
@@ -50,6 +51,9 @@ function RewardsBody({ r }: { r: RewardsDto }) {
     { icon: 'calendar-outline', text: t('rewards.earnStreak'), value: `+${r.earn.streakDay7}` },
     { icon: 'trophy-outline', text: t('rewards.earnWeekly'), value: `+${r.earn.weeklyMission}` },
     { icon: 'trending-up-outline', text: t('rewards.earnLevel'), value: `+${r.earn.levelUp}` },
+    ...(r.earn.adsPerDay > 0
+      ? [{ icon: 'play-circle-outline' as IconName, text: t('rewards.earnAds', { n: r.earn.adsPerDay }), value: `+${r.earn.perAd}` }]
+      : []),
     { icon: 'gift-outline', text: t('rewards.earnOffers'), value: t('rewards.soon') },
   ];
 
@@ -97,6 +101,17 @@ function RewardsBody({ r }: { r: RewardsDto }) {
         <Text variant="tiny" color={C.textSecondary}>
           {t('rewards.todayLand', { n: Math.min(r.todayLand, r.earn.landDailyCap), max: r.earn.landDailyCap })}
         </Text>
+        {r.nextLevelDailyCap && (
+          <Text variant="tiny" color={C.textSecondary}>
+            {t('rewards.nextLevelCap', { n: r.nextLevelDailyCap })}
+          </Text>
+        )}
+      </Card>
+
+      {/* Rewarded video: ⭐ on top of the free-play limit */}
+      <Card style={styles.section}>
+        <Text variant="bodyBold">{t('ads.title')}</Text>
+        <AdButton placement="bonus" />
       </Card>
 
       {/* How to earn */}

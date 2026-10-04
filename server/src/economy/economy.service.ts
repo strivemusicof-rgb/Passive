@@ -75,8 +75,12 @@ export const ECONOMY_DEFAULTS = {
     pointsPerEuro: 1000,
     minCashoutPoints: 5000,
     minAccountAgeDays: 7,
-    /** Total ⭐ per day from everything below. */
+    /** Total ⭐ per day from free play (everything in `earn`) at level 1 … */
     dailyCap: 150,
+    /** … plus this much per level above 1 … */
+    dailyCapPerLevel: 10,
+    /** … up to this. Long-term players can earn more; bots rarely level up. */
+    dailyCapMax: 400,
     earn: {
       checkIn: 5,
       streakDay7: 50,
@@ -84,10 +88,32 @@ export const ECONOMY_DEFAULTS = {
       levelUp: 25,
       /** Collecting land income: 1 ⭐ per this many coins collected … */
       landCoinsPerPoint: 50,
-      /** … up to this many ⭐ a day from land. */
+      /** … up to this many ⭐ a day from land (at level 1) … */
       landDailyCap: 60,
+      /** … plus this much per level above 1, up to landDailyCapMax. */
+      landDailyCapPerLevel: 5,
+      landDailyCapMax: 250,
     },
     methods: ['paypal', 'giftcard'],
+  },
+  /**
+   * Rewarded video ads (AdMob). Ads pay us, so their ⭐ don't count towards
+   * the free-play cap (they have their own: perAd × maxPerDay). Set
+   * `requireSsv` to true once the real AdMob ad unit has the server-side
+   * verification URL set; until then (Google's test ads) the app's word is
+   * trusted, which is fine because test ads give nothing of real value.
+   */
+  ads: {
+    enabled: true,
+    requireSsv: false,
+    /** Rewarded ads a player can watch per day (all placements together). */
+    maxPerDay: 20,
+    /** Seconds between two rewarded ads. */
+    cooldownSec: 30,
+    /** Watch after collecting: get the same coins again (up to maxCoins). */
+    collect2x: { maxCoins: 5000, withinMinutes: 15 },
+    /** Watch for a small bonus. */
+    bonus: { coins: 100, points: 5 },
   },
   /** Landmarks where buying gives better rarity odds. */
   hotspots: [
@@ -106,6 +132,24 @@ export type Economy = typeof ECONOMY_DEFAULTS;
 
 const CACHE_MS = 30_000;
 
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+function merge(base: unknown, over: unknown): unknown {
+  if (!isObject(base) || !isObject(over)) return over;
+  const out: Record<string, unknown> = { ...base };
+  for (const [k, v] of Object.entries(over)) out[k] = merge(base[k], v);
+  return out;
+}
+
+/** Free-play ⭐ limits for a player's level. */
+export function pointCaps(rewards: Economy['rewards'], level: number) {
+  const up = Math.max(0, level - 1);
+  return {
+    daily: Math.min(rewards.dailyCapMax, rewards.dailyCap + rewards.dailyCapPerLevel * up),
+    land: Math.min(rewards.earn.landDailyCapMax, rewards.earn.landDailyCap + rewards.earn.landDailyCapPerLevel * up),
+  };
+}
+
 @Injectable()
 export class EconomyService {
   private cache: { value: Economy; at: number } | null = null;
@@ -116,7 +160,9 @@ export class EconomyService {
     if (this.cache && Date.now() - this.cache.at < CACHE_MS) return this.cache.value;
     const rows = await this.prisma.economyConfig.findMany();
     const value = { ...ECONOMY_DEFAULTS } as Record<string, unknown>;
-    for (const row of rows) if (row.key in ECONOMY_DEFAULTS) value[row.key] = row.value;
+    // Objects are merged over the defaults, so a saved row from an older
+    // version still gets settings that were added later.
+    for (const row of rows) if (row.key in ECONOMY_DEFAULTS) value[row.key] = merge(value[row.key], row.value);
     this.cache = { value: value as Economy, at: Date.now() };
     return this.cache.value;
   }

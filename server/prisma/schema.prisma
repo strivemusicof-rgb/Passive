@@ -50,6 +50,7 @@ model User {
   missions     MissionProgress[]
   checkIns     CheckIn[]
   cashouts     CashoutRequest[]
+  adViews      AdView[]
 
   @@map("users")
 }
@@ -185,4 +186,29 @@ model CashoutRequest {
   @@index([status, createdAt])
   @@index([userId])
   @@map("cashout_requests")
+}
+
+/// One rewarded video ad. Created when the app is about to show an ad; the
+/// reward is paid once, when Google confirms the ad was watched (server-side
+/// verification) or, while that's off, when the app reports it.
+model AdView {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// "collect2x" or "bonus"
+  placement     String
+  /// collect2x: the collect ledger row being doubled (one ad per collect)
+  ref           String?
+  /// Coins this ad pays (fixed when it starts)
+  coins         Int       @default(0)
+  /// Points actually given (after limits)
+  points        Int       @default(0)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  rewardedAt    DateTime? @map("rewarded_at")
+  /// AdMob's transaction id: stops the same callback paying twice
+  admobTxId     String?   @unique @map("admob_tx_id")
+
+  @@unique([placement, ref])
+  @@index([userId, createdAt])
+  @@map("ad_views")
 }

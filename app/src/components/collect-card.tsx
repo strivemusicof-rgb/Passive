@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { AdButton } from '@/components/ad-button';
 import { Button } from '@/components/ui/button';
 import { CoinIcon, formatNumber } from '@/components/ui/currency';
 import { Text } from '@/components/ui/text';
@@ -73,6 +74,7 @@ export function CollectCard({ style }: { style?: StyleProp<ViewStyle> }) {
           {message.text}
         </Text>
       )}
+      <AdButton placement="collect2x" />
     </View>
   );
 }

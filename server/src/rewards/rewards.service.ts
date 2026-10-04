@@ -2,7 +2,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import type { CashoutRequestDto, RewardsDto } from '@landrush/shared';
 import { z } from 'zod';
 
-import { EconomyService, type Economy } from '../economy/economy.service.js';
+import { EconomyService, pointCaps, type Economy } from '../economy/economy.service.js';
 import { Prisma, type CashoutRequest } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { nextResets } from '../progress/periods.js';
@@ -10,6 +10,8 @@ import { WalletService, type Tx } from '../wallet/wallet.service.js';
 
 /** Ledger types that count as "earned from free play" for the daily cap. */
 const EARN_TYPES = ['points_check_in', 'points_streak', 'points_weekly_mission', 'points_level_up', 'points_land'];
+/** Everything a player earned (free play + ads), for the admin page. */
+const ALL_EARN_TYPES = [...EARN_TYPES, 'points_ad'];
 const DAY_MS = 86_400_000;
 
 export const CashoutBody = z.object({
@@ -48,22 +50,28 @@ export class RewardsService {
   }
 
   /**
-   * Gives free-play points, respecting the daily cap. Call inside the
-   * action's transaction (which already holds the player's wallet lock).
-   * Returns how many points were actually given.
+   * Gives points, respecting the daily caps (which grow with level). Ad
+   * points have their own limit (AdsService counts ads) and skip the
+   * free-play cap. Call inside the action's transaction (which already holds
+   * the player's wallet lock). Returns how many points were actually given.
    */
   async award(
     tx: Tx,
     userId: string,
     amount: number,
-    source: 'check_in' | 'streak' | 'weekly_mission' | 'level_up' | 'land',
+    source: 'check_in' | 'streak' | 'weekly_mission' | 'level_up' | 'land' | 'ad',
     ref?: string,
   ): Promise<number> {
     if (amount <= 0) return 0;
     const economy = await this.economy.get();
     if (!(await this.enabledFor(tx, userId, economy))) return 0;
-    let grant = Math.min(amount, economy.rewards.dailyCap - (await this.earnedToday(tx, userId)));
-    if (source === 'land') grant = Math.min(grant, economy.rewards.earn.landDailyCap - (await this.earnedToday(tx, userId, ['points_land'])));
+    let grant = amount;
+    if (source !== 'ad') {
+      const { level } = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { level: true } });
+      const caps = pointCaps(economy.rewards, level);
+      grant = Math.min(grant, caps.daily - (await this.earnedToday(tx, userId)));
+      if (source === 'land') grant = Math.min(grant, caps.land - (await this.earnedToday(tx, userId, ['points_land'])));
+    }
     if (grant <= 0) return 0;
     await this.wallet.change(tx, userId, 'points', grant, `points_${source}`, ref);
     return grant;
@@ -72,12 +80,13 @@ export class RewardsService {
   async summary(userId: string): Promise<RewardsDto> {
     const economy = await this.economy.get();
     const { rewards } = economy;
-    const [enabled, wallet, user, todayEarned, todayLand, history, requests] = await Promise.all([
+    const [enabled, wallet, user, todayEarned, todayLand, todayAds, history, requests] = await Promise.all([
       this.enabledFor(this.prisma, userId, economy),
       this.prisma.$transaction((tx) => this.wallet.ensure(tx, userId)),
       this.prisma.user.findUniqueOrThrow({ where: { id: userId } }),
       this.earnedToday(this.prisma, userId),
       this.earnedToday(this.prisma, userId, ['points_land']),
+      this.earnedToday(this.prisma, userId, ['points_ad']),
       this.prisma.transaction.findMany({
         where: { userId, currency: 'points' },
         orderBy: { id: 'desc' },
@@ -87,6 +96,8 @@ export class RewardsService {
       this.prisma.cashoutRequest.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 10 }),
     ]);
     const pending = requests.some((r) => r.status === 'pending');
+    const caps = pointCaps(rewards, user.level);
+    const next = pointCaps(rewards, user.level + 1);
     return {
       enabled,
       points: wallet.points,
@@ -94,8 +105,19 @@ export class RewardsService {
       minCashoutPoints: rewards.minCashoutPoints,
       todayEarned,
       todayLand,
-      dailyCap: rewards.dailyCap,
-      earn: rewards.earn,
+      todayAds,
+      dailyCap: caps.daily,
+      nextLevelDailyCap: next.daily > caps.daily ? next.daily : null,
+      earn: {
+        checkIn: rewards.earn.checkIn,
+        streakDay7: rewards.earn.streakDay7,
+        weeklyMission: rewards.earn.weeklyMission,
+        levelUp: rewards.earn.levelUp,
+        landCoinsPerPoint: rewards.earn.landCoinsPerPoint,
+        landDailyCap: caps.land,
+        perAd: economy.ads.enabled ? economy.ads.bonus.points : 0,
+        adsPerDay: economy.ads.enabled ? economy.ads.maxPerDay : 0,
+      },
       methods: rewards.methods,
       cashoutBlocked: !enabled
         ? 'rewards_disabled'
@@ -171,7 +193,7 @@ export class RewardsService {
         const [plots, checkIns, earned, sameDestination] = await Promise.all([
           this.prisma.plot.count({ where: { ownerId: r.userId } }),
           this.prisma.checkIn.count({ where: { userId: r.userId } }),
-          this.prisma.transaction.aggregate({ where: { userId: r.userId, currency: 'points', amount: { gt: 0 }, type: { in: EARN_TYPES } }, _sum: { amount: true } }),
+          this.prisma.transaction.aggregate({ where: { userId: r.userId, currency: 'points', amount: { gt: 0 }, type: { in: ALL_EARN_TYPES } }, _sum: { amount: true } }),
           this.prisma.cashoutRequest.findMany({ where: { destination: r.destination, userId: { not: r.userId } }, distinct: ['userId'], select: { userId: true } }),
         ]);
         const ageDays = Math.floor((Date.now() - r.user.createdAt.getTime()) / DAY_MS);

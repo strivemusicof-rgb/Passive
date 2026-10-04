@@ -203,7 +203,11 @@ export interface RewardsDto {
   todayEarned: number;
   /** Of which from collecting land income (limited by earn.landDailyCap). */
   todayLand: number;
+  /** From rewarded ads today (not part of the free-play limit). */
+  todayAds: number;
+  /** Free-play limit for the player's level, and the next level's (null at the top). */
   dailyCap: number;
+  nextLevelDailyCap: number | null;
   earn: {
     checkIn: number;
     streakDay7: number;
@@ -211,6 +215,9 @@ export interface RewardsDto {
     levelUp: number;
     landCoinsPerPoint: number;
     landDailyCap: number;
+    /** ⭐ per bonus ad and how many ads a day (0 = ads off). */
+    perAd: number;
+    adsPerDay: number;
   };
   methods: string[];
   /** Why cash-out isn't possible yet (null = it is). */
@@ -218,4 +225,29 @@ export interface RewardsDto {
   /** Recent point changes, newest first. */
   history: { amount: number; type: string; createdAt: string }[];
   requests: CashoutRequestDto[];
+}
+
+// ------------------------------------------------------------ rewarded ads
+
+export type AdPlacement = 'collect2x' | 'bonus';
+
+/** GET /ads: what the player can watch now. */
+export interface AdsDto {
+  enabled: boolean;
+  remainingToday: number;
+  maxPerDay: number;
+  /** Next ad allowed from this time (null = now). */
+  cooldownUntil: string | null;
+  /** Coins a 2× ad would give for the latest collect (null = nothing to double). */
+  collect2x: { coins: number } | null;
+  bonus: { coins: number; points: number };
+}
+
+/** POST /ads/:id/complete. "pending" = waiting for Google to confirm; ask again shortly. */
+export interface AdRewardResponse {
+  status: 'rewarded' | 'pending';
+  coins: number;
+  points: number;
+  wallet: WalletDto;
+  ads: AdsDto;
 }

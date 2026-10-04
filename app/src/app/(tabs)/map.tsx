@@ -15,6 +15,7 @@ import { Amount } from '@/components/ui/currency';
 import { Progress } from '@/components/ui/progress';
 import { Text } from '@/components/ui/text';
 import { C, R, S, TAB_BAR_HEIGHT } from '@/constants/theme';
+import { initAds } from '@/lib/ads';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { useGame } from '@/lib/game';
@@ -64,6 +65,12 @@ export default function MapRoute() {
     centred.current = true;
     map.current?.moveTo({ lat: myPlots[0].lat, lng: myPlots[0].lng });
   }, [myPlots]);
+
+  // Get the ad SDK ready (EU consent + Apple's tracking question) a moment after the map shows.
+  useEffect(() => {
+    const id = setTimeout(() => initAds().catch(() => {}), 4000);
+    return () => clearTimeout(id);
+  }, []);
 
   useEffect(() => {
     prefs.get('mapStyle').then((v) => v === 'satellite' && setMapStyle('satellite'));
@@ -160,16 +167,17 @@ export default function MapRoute() {
 
       <DailyPopup />
 
-      {/* Income + collect */}
-      <CollectCard style={[styles.collect, { top: insets.top + 70 }]} />
-
-      {free.length === 0 && owned.length === 0 && bounds && (
-        <View style={[styles.hint, { top: insets.top + 175 }]}>
-          <Text variant="small" center>
-            {t('map.zoomIn')}
-          </Text>
-        </View>
-      )}
+      {/* Income + collect, with the zoom hint underneath (the card grows when an ad is offered) */}
+      <View style={[styles.collect, { top: insets.top + 70 }]} pointerEvents="box-none">
+        <CollectCard />
+        {free.length === 0 && owned.length === 0 && bounds && (
+          <View style={styles.hint}>
+            <Text variant="small" center>
+              {t('map.zoomIn')}
+            </Text>
+          </View>
+        )}
+      </View>
 
       {/* Right-side shortcuts */}
       <View style={[styles.side, { bottom }]}>
@@ -251,10 +259,8 @@ const styles = StyleSheet.create({
   levelText: { width: 70, gap: 5 },
   balances: { gap: S.md, paddingHorizontal: S.lg, height: 48 },
   sep: { width: 1, height: 22, backgroundColor: 'rgba(255,255,255,0.15)' },
-  collect: { position: 'absolute', alignSelf: 'center' },
+  collect: { position: 'absolute', alignSelf: 'center', alignItems: 'center', gap: S.sm },
   hint: {
-    position: 'absolute',
-    alignSelf: 'center',
     paddingHorizontal: S.md,
     paddingVertical: S.sm,
     borderRadius: R.pill,
