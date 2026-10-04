@@ -1,7 +1,14 @@
+import type { Rarity } from '@landrush/shared';
 import { cellBounds, type Cell } from '@landrush/shared/grid';
+
+import { RARITY_COLORS } from '@/constants/theme';
 
 /** Map icon per building level (0 = empty land). */
 export const BUILDING_ICONS = ['pine-tree', 'home-variant', 'office-building', 'domain', 'city-variant'] as const;
+
+/** Tile colour on the map: the owner's skin, else the rarity colour. */
+export const tileColor = (c: { skinColor?: string | null; rarity: Rarity | null }) =>
+  c.skinColor ?? RARITY_COLORS[c.rarity ?? 'common'].map;
 
 export type Coord = { latitude: number; longitude: number };
 

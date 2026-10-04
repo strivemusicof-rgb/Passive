@@ -174,7 +174,7 @@ export default function MarketplaceRoute() {
               <PlotThumb kind={BUILDING_BY_LEVEL[l.plot.buildingLevel] ?? 'empty'} />
               <View style={styles.info}>
                 <Text variant="bodyBold">#{l.plot.number}</Text>
-                <Text variant="small" color={C.textSecondary} numberOfLines={1}>
+                <Text variant="small" color={l.mine ? C.textSecondary : (l.seller.style.nameColor ?? C.textSecondary)} numberOfLines={1}>
                   {l.mine ? t('market.yours') : t('market.seller', { name: l.seller.displayName })}
                 </Text>
                 <Amount value={l.plot.incomePerDay} suffix={t('common.perDay')} variant="smallBold" iconSize={14} />

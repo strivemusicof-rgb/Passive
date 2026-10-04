@@ -3,6 +3,7 @@ import { RARITIES, type ListingDto, type MarketBuyResponse, type MarketResponse,
 import { cellKey, type Cell } from '@landrush/shared/grid';
 import { z } from 'zod';
 
+import { playerRef, playerSelect } from '../cosmetics/style.js';
 import { EconomyService, type Economy } from '../economy/economy.service.js';
 import { plotValue, priceRange } from '../economy/rarity.js';
 import { Prisma } from '../generated/prisma/client.js';
@@ -28,8 +29,8 @@ export const MarketQuery = z.object({
 
 const withPlot = {
   plot: { include: withOwner },
-  seller: { select: { id: true, displayName: true } },
-  buyer: { select: { id: true, displayName: true } },
+  seller: { select: playerSelect },
+  buyer: { select: playerSelect },
 } as const;
 type ListingRow = Prisma.ListingGetPayload<{ include: typeof withPlot }>;
 
@@ -164,7 +165,8 @@ export class MarketService {
       await this.wallet.change(tx, listing.sellerId, 'coins', listing.price - fee, 'market_sale', id);
       const moved = await tx.plot.update({
         where: { row_col: { row: listing.row, col: listing.col } },
-        data: { ownerId: buyerId, collectedAt: now, acquiredAt: now, name: null },
+        // The seller's skin and flag are theirs, not part of the land.
+        data: { ownerId: buyerId, collectedAt: now, acquiredAt: now, name: null, skin: null, flag: null },
         include: withOwner,
       });
       await this.tracker.track(tx, buyerId, 'buyPlot', 1, now);
@@ -218,8 +220,8 @@ export class MarketService {
       status: r.status,
       createdAt: r.createdAt.toISOString(),
       closedAt: r.closedAt?.toISOString() ?? null,
-      seller: r.seller,
-      buyer: r.buyer,
+      seller: playerRef(r.seller),
+      buyer: r.buyer ? playerRef(r.buyer) : null,
       mine: r.sellerId === viewerId,
       favourite: favKeys.has(cellKey(r)),
       plot: this.plots.ownedDto(r.plot, viewerId, economy, ownedNeighbours(r.plot, keysByOwner.get(r.plot.ownerId) ?? new Set())),

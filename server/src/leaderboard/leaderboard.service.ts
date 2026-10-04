@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import type { LeaderboardEntry, LeaderboardResponse, LeaderboardScope, Rarity } from '@landrush/shared';
+import type { LeaderboardEntry, LeaderboardResponse, LeaderboardScope, PlayerRef, Rarity } from '@landrush/shared';
 
+import { playerRef, playerSelect } from '../cosmetics/style.js';
 import { EconomyService, type Economy } from '../economy/economy.service.js';
 import { plotIncome } from '../economy/rarity.js';
 import { Prisma } from '../generated/prisma/client.js';
@@ -43,7 +44,8 @@ export class LeaderboardService {
     const entry = (r: Row, i: number): LeaderboardEntry => ({
       rank: i + 1,
       userId: r.userId,
-      displayName: names.get(r.userId) ?? '?',
+      displayName: names.get(r.userId)?.displayName ?? '?',
+      style: names.get(r.userId)?.style ?? { nameColor: null, frame: null },
       plots: r.plots,
       incomePerHour: perHour(r.perDay),
       score: r.score,
@@ -138,12 +140,12 @@ export class LeaderboardService {
     const last = gameMonth(new Date(gameMonth(now).start.getTime() - 1));
     const rows = await this.prisma.leaderboardPrize.findMany({ where: { month: last.month, rank: { gt: 0 } }, orderBy: { rank: 'asc' } });
     const names = await this.names(rows.map((r) => r.userId!).filter(Boolean));
-    return rows.map((r) => ({ rank: r.rank, displayName: (r.userId && names.get(r.userId)) || '?', gems: r.gems }));
+    return rows.map((r) => ({ rank: r.rank, displayName: (r.userId && names.get(r.userId)?.displayName) || '?', gems: r.gems }));
   }
 
-  private async names(ids: string[]): Promise<Map<string, string>> {
-    const users = await this.prisma.user.findMany({ where: { id: { in: [...new Set(ids)] } }, select: { id: true, displayName: true } });
-    return new Map(users.map((u) => [u.id, u.displayName]));
+  private async names(ids: string[]): Promise<Map<string, PlayerRef>> {
+    const users = await this.prisma.user.findMany({ where: { id: { in: [...new Set(ids)] } }, select: playerSelect });
+    return new Map(users.map((u) => [u.id, playerRef(u)]));
   }
 
   private async cached(key: string, load: () => Promise<Row[]>): Promise<Row[]> {

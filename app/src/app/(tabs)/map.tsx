@@ -39,6 +39,8 @@ const toCell = (p: PlotDto): MapCell => ({
   owned: !!p.owner,
   buildingLevel: p.buildingLevel,
   forSale: !!p.listing,
+  skinColor: p.skin?.color ?? null,
+  flag: p.flag?.emoji ?? null,
 });
 
 /** 4. Home / map. */
@@ -140,7 +142,7 @@ export default function MapRoute() {
       {/* Floating panels: level (left) and balances (right). Tap ⭐ for Rewards. */}
       <View style={[styles.topRow, { top: insets.top + S.xs }]} pointerEvents="box-none">
         <Pressable style={[styles.pill, styles.levelPill]} onPress={() => router.push('/profile')}>
-          <Avatar name={user?.displayName ?? '?'} size={40} ring={C.green} />
+          <Avatar name={user?.displayName ?? '?'} size={40} ring={C.green} frame={user?.style.frame} />
           <View style={styles.levelText}>
             <Text variant="bodyBold">{t('common.lv', { level: user?.level ?? 1 })}</Text>
             <Progress value={user ? user.levelXp.current / user.levelXp.needed : 0} height={6} />

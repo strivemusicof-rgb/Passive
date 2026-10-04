@@ -1,4 +1,6 @@
 import type {
+  CosmeticBuyResponse,
+  CosmeticsResponse,
   LeaderboardResponse,
   LeaderboardScope,
   ListingDto,
@@ -143,6 +145,12 @@ export const api = {
   cancelListing: (id: string) => request<ListingDto>('POST', `/market/${id}/cancel`),
   buyListing: (id: string) => request<MarketBuyResponse>('POST', `/market/${id}/buy`),
   leaderboard: (scope: LeaderboardScope) => request<LeaderboardResponse>('GET', `/leaderboard?scope=${scope}`),
+  cosmetics: () => request<CosmeticsResponse>('GET', '/cosmetics'),
+  buyCosmetic: (id: string) => request<CosmeticBuyResponse>('POST', `/cosmetics/${encodeURIComponent(id)}/buy`),
+  setStyle: (body: { nameColor?: string | null; avatarFrame?: string | null }) =>
+    request<UserDto>('POST', '/me/style', body),
+  setPlotStyle: (key: string, body: { skin?: string | null; flag?: string | null }) =>
+    request<PlotDto>('POST', `/plots/${encodeURIComponent(key)}/style`, body),
   favourite: (key: string, on: boolean) =>
     request<{ favourite: boolean }>(on ? 'PUT' : 'DELETE', `/plots/${encodeURIComponent(key)}/favourite`),
 };

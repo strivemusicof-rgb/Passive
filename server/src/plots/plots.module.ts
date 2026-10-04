@@ -6,6 +6,8 @@ import { AdminController } from '../admin/admin.controller.js';
 import { AdmobVerifier } from '../ads/admob.verifier.js';
 import { AdsController } from '../ads/ads.controller.js';
 import { AdsService } from '../ads/ads.service.js';
+import { CosmeticsController } from '../cosmetics/cosmetics.controller.js';
+import { CosmeticsService } from '../cosmetics/cosmetics.service.js';
 import { LeaderboardController } from '../leaderboard/leaderboard.controller.js';
 import { LeaderboardService } from '../leaderboard/leaderboard.service.js';
 import { MarketController } from '../market/market.controller.js';
@@ -20,7 +22,7 @@ import { PlotsController } from './plots.controller.js';
 import { PlotsService } from './plots.service.js';
 
 @Module({
-  controllers: [PlotsController, ProgressController, RewardsController, AdminController, AdsController, MarketController, LeaderboardController],
-  providers: [PlotsService, WalletService, EconomyService, IncomeService, TrackerService, ProgressService, RewardsService, AdsService, AdmobVerifier, MarketService, LeaderboardService],
+  controllers: [PlotsController, ProgressController, RewardsController, AdminController, AdsController, MarketController, LeaderboardController, CosmeticsController],
+  providers: [PlotsService, WalletService, EconomyService, IncomeService, TrackerService, ProgressService, RewardsService, AdsService, AdmobVerifier, MarketService, LeaderboardService, CosmeticsService],
 })
 export class PlotsModule {}

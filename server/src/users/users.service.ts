@@ -2,6 +2,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import type { Language, UserDto } from '@landrush/shared';
 import { randomInt } from 'node:crypto';
 
+import { userStyle } from '../cosmetics/style.js';
 import { Prisma, type User } from '../generated/prisma/client.js';
 import { levelProgress } from '../progress/levels.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -13,6 +14,7 @@ export function toUserDto(u: User): UserDto {
   return {
     id: u.id,
     displayName: u.displayName,
+    style: userStyle(u),
     isGuest: u.isGuest,
     hasApple: !!u.appleSub,
     hasEmail: !!u.email,

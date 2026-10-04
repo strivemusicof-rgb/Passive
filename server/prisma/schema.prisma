@@ -43,6 +43,10 @@ model User {
   streakDay    Int       @default(0) @map("streak_day")
   /// Riga calendar day (YYYY-MM-DD) of the last daily-reward claim.
   lastDailyClaim String? @map("last_daily_claim")
+  /// Equipped cosmetics (item ids from shared/src/cosmetics.js)
+  nameColor    String?   @map("name_color")
+  avatarFrame  String?   @map("avatar_frame")
+  cosmetics    UserCosmetic[]
   sessions     Session[]
   wallet       Wallet?
   transactions Transaction[]
@@ -123,6 +127,9 @@ model Plot {
   rarity        String
   buildingLevel Int      @default(0) @map("building_level")
   name          String?
+  /// Cosmetics shown on the map (item ids); cleared when the plot is sold.
+  skin          String?
+  flag          String?
   /// Income accrues from here (capped by the owner's storage); reset on collect.
   collectedAt   DateTime @default(now()) @map("collected_at")
   acquiredAt    DateTime @default(now()) @map("acquired_at")
@@ -272,4 +279,15 @@ model LeaderboardPrize {
 
   @@id([month, rank])
   @@map("leaderboard_prizes")
+}
+
+/// A cosmetic item the player owns (bought once, used as often as they like).
+model UserCosmetic {
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemId    String   @map("item_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([userId, itemId])
+  @@map("user_cosmetics")
 }

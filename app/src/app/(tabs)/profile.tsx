@@ -34,13 +34,15 @@ export default function ProfileRoute() {
       />
       <View style={styles.hero}>
         <View>
-          <Avatar name={name} size={92} ring={C.green} />
+          <Avatar name={name} size={92} ring={C.green} frame={user?.style.frame} />
           <View style={styles.verified}>
             <Ionicons name="shield-checkmark" size={14} color="#fff" />
           </View>
         </View>
         <View style={styles.heroText}>
-          <Text variant="h2">{name}</Text>
+          <Text variant="h2" color={user?.style.nameColor ?? undefined}>
+            {name}
+          </Text>
           <Text variant="small" color={C.textSecondary}>
             {t('common.lv', { level })}
           </Text>

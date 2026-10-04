@@ -161,6 +161,14 @@ export const game = {
     set({ myPlots: withPlot(listing.plot), version: state.version + 1 });
     return listing;
   },
+  /** After buying a cosmetic: the server's new balance. */
+  setWallet: (wallet: WalletDto) => set({ wallet }),
+  /** Put a skin / flag on one of your plots (null takes it off). */
+  setPlotStyle: async (key: string, body: { skin?: string | null; flag?: string | null }) => {
+    const plot = await api.setPlotStyle(key, body);
+    set({ myPlots: withPlot(plot), version: state.version + 1 });
+    return plot;
+  },
   loadAds: () => {
     api.ads().then((ads) => set({ ads })).catch(() => {});
   },

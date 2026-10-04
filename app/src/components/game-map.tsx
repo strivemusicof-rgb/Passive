@@ -2,11 +2,10 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import type { Rarity } from '@landrush/shared';
 import { cellCenter, type CellBounds } from '@landrush/shared/grid';
 import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker, Polygon, type Region } from 'react-native-maps';
 
-import { RARITY_COLORS } from '@/constants/theme';
-import { BUILDING_ICONS, roundedCell } from '@/lib/plot-shape';
+import { BUILDING_ICONS, roundedCell, tileColor } from '@/lib/plot-shape';
 
 /** rarity is null for free cells; boosted = free cell near a landmark (better odds). */
 export type MapCell = {
@@ -20,6 +19,10 @@ export type MapCell = {
   buildingLevel: number;
   /** On sale on the marketplace: the icon turns gold. */
   forSale?: boolean;
+  /** Bought plot skin: replaces the rarity colour. */
+  skinColor?: string | null;
+  /** Bought plot flag (emoji), shown on the tile. */
+  flag?: string | null;
 };
 export type LatLng = { lat: number; lng: number };
 export type GameMapHandle = { moveTo: (at: LatLng) => void };
@@ -122,7 +125,7 @@ export const GameMap = forwardRef<GameMapHandle, GameMapProps>(function GameMap(
 
       {/* Owned plots: a wide faint stroke underneath gives the glow, then the tile itself. */}
       {owned.map((c) => {
-        const color = RARITY_COLORS[c.rarity ?? 'common'].map;
+        const color = tileColor(c);
         return (
           <Polygon
             key={`${c.key}-glow`}
@@ -135,7 +138,7 @@ export const GameMap = forwardRef<GameMapHandle, GameMapProps>(function GameMap(
         );
       })}
       {owned.map((c) => {
-        const color = RARITY_COLORS[c.rarity ?? 'common'].map;
+        const color = tileColor(c);
         return (
           <Polygon
             key={c.key}
@@ -154,18 +157,22 @@ export const GameMap = forwardRef<GameMapHandle, GameMapProps>(function GameMap(
           const at = cellCenter(c);
           return (
             <Marker
-              key={`${c.key}-icon`}
+              // The marker is drawn once (tracksViewChanges off), so a change must give it a new key.
+              key={`${c.key}-icon-${c.buildingLevel}-${c.forSale ? 's' : ''}-${c.flag ?? ''}-${delta < 0.005 ? 'l' : 's'}`}
               coordinate={{ latitude: at.lat, longitude: at.lng }}
               anchor={{ x: 0.5, y: 0.5 }}
               tracksViewChanges={false}
               onPress={() => onPress(at)}
               zIndex={4}>
-              <MaterialCommunityIcons
-                name={BUILDING_ICONS[c.buildingLevel] ?? 'pine-tree'}
-                size={delta < 0.005 ? 22 : 16}
-                color={c.forSale ? C_LANDMARK : 'rgba(255,255,255,0.9)'}
-                style={styles.iconShadow}
-              />
+              <View style={styles.iconWrap}>
+                <MaterialCommunityIcons
+                  name={BUILDING_ICONS[c.buildingLevel] ?? 'pine-tree'}
+                  size={delta < 0.005 ? 22 : 16}
+                  color={c.forSale ? C_LANDMARK : 'rgba(255,255,255,0.9)'}
+                  style={styles.iconShadow}
+                />
+                {c.flag && <Text style={[styles.flag, { fontSize: delta < 0.005 ? 13 : 10 }]}>{c.flag}</Text>}
+              </View>
             </Marker>
           );
         })}
@@ -188,6 +195,8 @@ export const GameMap = forwardRef<GameMapHandle, GameMapProps>(function GameMap(
 });
 
 const styles = StyleSheet.create({
+  iconWrap: { paddingTop: 6, paddingRight: 8 },
+  flag: { position: 'absolute', top: 0, right: 0 },
   iconShadow: { textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 4 },
   pin: { shadowColor: '#000', shadowOpacity: 0.5, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
 });

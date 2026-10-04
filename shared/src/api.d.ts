@@ -1,9 +1,23 @@
 import type { Language } from './index.js';
 
 /** Public view of the signed-in player (GET /me). */
+/** How a player looks to others (equipped cosmetics, resolved to colours). */
+export interface UserStyle {
+  nameColor: string | null;
+  frame: { color: string; accent: string | null } | null;
+}
+
+/** A player shown next to something (plot owner, seller, leaderboard row). */
+export interface PlayerRef {
+  id: string;
+  displayName: string;
+  style: UserStyle;
+}
+
 export interface UserDto {
   id: string;
   displayName: string;
+  style: UserStyle;
   isGuest: boolean;
   hasApple: boolean;
   hasEmail: boolean;
@@ -75,7 +89,10 @@ export interface PlotDto {
   odds: Record<import('./index.js').Rarity, number> | null;
   /** Free plot near a landmark, with better odds. */
   boosted: boolean;
-  owner: { id: string; displayName: string } | null;
+  owner: PlayerRef | null;
+  /** Cosmetics on owned plots: tile colour on the map, and an emoji flag. */
+  skin: { id: string; color: string } | null;
+  flag: { id: string; emoji: string } | null;
   mine: boolean;
   buildingLevel: number;
   /** Owned plots only (free plots earn nothing until bought). Includes the neighbour bonus. */
@@ -270,8 +287,8 @@ export interface ListingDto {
   status: ListingStatus;
   createdAt: string;
   closedAt: string | null;
-  seller: { id: string; displayName: string };
-  buyer: { id: string; displayName: string } | null;
+  seller: PlayerRef;
+  buyer: PlayerRef | null;
   mine: boolean;
   favourite: boolean;
   plot: PlotDto;
@@ -307,6 +324,7 @@ export interface LeaderboardEntry {
   rank: number;
   userId: string;
   displayName: string;
+  style: UserStyle;
   plots: number;
   incomePerHour: number;
   /** What the board is ranked by (income/h, or coins collected this month). */
@@ -323,4 +341,28 @@ export interface LeaderboardResponse {
   monthEndsAt: string;
   /** Last month's prize winners. */
   lastWinners: { rank: number; displayName: string; gems: number }[];
+}
+
+// ------------------------------------------------------------ cosmetics
+
+export interface CosmeticItemDto {
+  id: string;
+  type: import('./cosmetics.js').CosmeticType;
+  value: string;
+  accent: string | null;
+  gems: number | null;
+  coins: number | null;
+  owned: boolean;
+}
+
+/** GET /cosmetics */
+export interface CosmeticsResponse {
+  items: CosmeticItemDto[];
+  /** What you're wearing now (item ids). */
+  equipped: { nameColor: string | null; avatarFrame: string | null };
+}
+
+/** POST /cosmetics/:id/buy */
+export interface CosmeticBuyResponse extends CosmeticsResponse {
+  wallet: WalletDto;
 }

@@ -170,8 +170,8 @@ function Row({ e, month, me }: { e: LeaderboardEntry; month: boolean; me: boolea
         {e.rank}
       </Text>
       <View style={[styles.player, styles.playerCell]}>
-        <Avatar name={e.displayName} size={24} />
-        <Text variant="smallBold" numberOfLines={1} style={styles.flex}>
+        <Avatar name={e.displayName} size={24} frame={e.style.frame} />
+        <Text variant="smallBold" numberOfLines={1} style={styles.flex} color={e.style.nameColor ?? undefined}>
           {e.displayName}
           {me ? ` (${t('leaderboard.you')})` : ''}
         </Text>

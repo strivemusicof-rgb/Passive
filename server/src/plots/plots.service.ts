@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable 
 import type { BuyPlotResponse, MapPlotsResponse, PlotDto, Rarity, UpgradeResponse } from '@landrush/shared';
 import { cellAt, cellCenter, cellKey, cellsInBox, neighbours, type Cell, type CellBounds } from '@landrush/shared/grid';
 
+import { playerRef, playerSelect, plotLook } from '../cosmetics/style.js';
 import { EconomyService, type Economy } from '../economy/economy.service.js';
 import { plotIncomePerDay } from '../economy/income.js';
 import { buildingCost, buildingIncome, hotspotBoost, plotPrice, plotValue, priceRange, rarityOdds, rollRarity } from '../economy/rarity.js';
@@ -12,7 +13,7 @@ import { TrackerService } from '../progress/tracker.service.js';
 import { WalletService, type Tx } from '../wallet/wallet.service.js';
 
 export const withOwner = {
-  owner: { select: { id: true, displayName: true } },
+  owner: { select: playerSelect },
   listings: { where: { status: 'active' }, select: { id: true, price: true }, take: 1 },
 } as const;
 export type OwnedRow = Prisma.PlotGetPayload<{ include: typeof withOwner }>;
@@ -207,7 +208,8 @@ export class PlotsService {
       rarity,
       odds: null,
       boosted: false,
-      owner: p.owner,
+      owner: playerRef(p.owner),
+      ...plotLook(p),
       mine,
       buildingLevel: p.buildingLevel,
       incomePerDay: plotIncomePerDay({ rarity, buildingLevel: p.buildingLevel, neighbours: neighbourCount }, economy),
@@ -243,6 +245,8 @@ export class PlotsService {
       odds: rarityOdds(cell, economy),
       boosted: hotspotBoost(cell, economy) > 0,
       owner: null,
+      skin: null,
+      flag: null,
       mine: false,
       buildingLevel: 0,
       incomePerDay: 0,

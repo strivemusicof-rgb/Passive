@@ -13,6 +13,10 @@
     "./grid": {
       "types": "./src/grid.d.ts",
       "default": "./src/grid.js"
+    },
+    "./cosmetics": {
+      "types": "./src/cosmetics.d.ts",
+      "default": "./src/cosmetics.js"
     }
   },
   "scripts": {

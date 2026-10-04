@@ -4,10 +4,9 @@
 import { cellBounds } from '@landrush/shared/grid';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
-import { Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 
-import { RARITY_COLORS } from '@/constants/theme';
-import { BUILDING_ICONS } from '@/lib/plot-shape';
+import { BUILDING_ICONS, tileColor } from '@/lib/plot-shape';
 
 import {
   type GameMapHandle,
@@ -86,7 +85,7 @@ export const GameMap = forwardRef<GameMapHandle, GameMapProps>(function GameMap(
         const br = toPx(b.south, b.east);
         const w = br.x - tl.x;
         const gap = w * 0.06;
-        const color = c.rarity ? RARITY_COLORS[c.rarity].map : C_FREE;
+        const color = c.owned ? tileColor(c) : C_FREE;
         const selected = c.key === selectedKey;
         return (
           <View
@@ -127,6 +126,7 @@ export const GameMap = forwardRef<GameMapHandle, GameMapProps>(function GameMap(
                 color={c.forSale ? C_LANDMARK : 'rgba(255,255,255,0.9)'}
               />
             )}
+            {c.owned && c.flag && <Text style={[styles.flag, { fontSize: w * 0.28 }]}>{c.flag}</Text>}
             {selected && (
               <Ionicons
                 name="location"
@@ -143,6 +143,7 @@ export const GameMap = forwardRef<GameMapHandle, GameMapProps>(function GameMap(
 });
 
 const styles = StyleSheet.create({
+  flag: { position: 'absolute', top: -2, right: 0 },
   bg: { backgroundColor: '#1B2026', overflow: 'hidden' },
   sat: { backgroundColor: '#2B3326', overflow: 'hidden' },
 });

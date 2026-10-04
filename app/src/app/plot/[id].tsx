@@ -7,6 +7,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { BUILDING_BY_LEVEL, PlotArt } from '@/components/art/plot-art';
 import { OddsCard } from '@/components/odds-card';
+import { PlotLook } from '@/components/plot-look';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Amount, formatNumber } from '@/components/ui/currency';
@@ -261,13 +262,16 @@ export default function PlotRoute() {
             </InfoRow>
           )}
           <InfoRow label={t('plot.owner')}>
-            {plot.mine ? t('common.you') : (plot.owner?.displayName ?? t('plot.nobody'))}
+            <Text variant="smallBold" color={plot.owner?.style.nameColor ?? undefined}>
+              {plot.mine ? t('common.you') : (plot.owner?.displayName ?? t('plot.nobody'))}
+            </Text>
           </InfoRow>
           <InfoRow label={t('plot.marketStatus')} last>
-            {t('plot.notForSale')}
+            {plot.listing ? t('plot.onSale', { price: formatNumber(plot.listing.price) }) : t('plot.notForSale')}
           </InfoRow>
         </Card>
       )}
+      {plot.mine && <PlotLook plot={plot} onChange={setPlot} />}
     </Screen>
   );
 }
