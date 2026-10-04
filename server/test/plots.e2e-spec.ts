@@ -41,8 +41,8 @@ describe('plots & wallet (e2e)', () => {
   it('new players get the welcome bonus once', async () => {
     const p = await guest();
     const [a, b] = await Promise.all([http().get('/wallet').set(p.auth), http().get('/wallet').set(p.auth)]);
-    expect(a.body).toEqual({ coins: 1000, gems: 20 });
-    expect(b.body).toEqual({ coins: 1000, gems: 20 });
+    expect(a.body).toEqual({ coins: 1000, gems: 20, points: 0 });
+    expect(b.body).toEqual({ coins: 1000, gems: 20, points: 0 });
     await ledgerMatches(p.id);
   });
 

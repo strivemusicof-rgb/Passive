@@ -5,6 +5,7 @@ import type {
   MissionsResponse,
   PlotDto,
   RewardResponse,
+  RewardsDto,
   WalletDto,
 } from '@landrush/shared';
 import { useEffect, useSyncExternalStore } from 'react';
@@ -23,6 +24,7 @@ type State = {
   missions: MissionsResponse | null;
   daily: DailyRewardDto | null;
   achievements: AchievementDto[] | null;
+  rewards: RewardsDto | null;
   /** Bumped after any change to plots, so the map knows to reload. */
   version: number;
 };
@@ -35,6 +37,7 @@ const EMPTY: State = {
   missions: null,
   daily: null,
   achievements: null,
+  rewards: null,
   version: 0,
 };
 let state: State = EMPTY;
@@ -49,6 +52,7 @@ function set(patch: Partial<State>) {
 /** After any action: missions/achievements may have moved; XP may have changed. */
 function refreshProgress() {
   api.missions().then((missions) => set({ missions })).catch(() => {});
+  api.rewards().then((rewards) => set({ rewards })).catch(() => {});
   api.achievements().then((achievements) => set({ achievements })).catch(() => {});
   auth.refreshUser().catch(() => {});
 }
@@ -83,6 +87,7 @@ export const game = {
         loaded = true;
         set({ wallet, myPlots, income, incomeAt: Date.now(), missions, daily });
         api.achievements().then((achievements) => set({ achievements })).catch(() => {});
+        api.rewards().then((rewards) => set({ rewards })).catch(() => {});
       } finally {
         loading = null;
       }
@@ -104,7 +109,7 @@ export const game = {
     const res = await api.collect();
     set({ wallet: res.wallet, income: res.income, incomeAt: Date.now() });
     if (res.collected > 0) refreshProgress();
-    return res.collected;
+    return res;
   },
   upgrade: async (key: string) => {
     const res = await api.upgradePlot(key);
@@ -123,6 +128,11 @@ export const game = {
     return applyReward(res);
   },
   checkIn: async (key: string, lat: number, lng: number) => applyReward(await api.checkIn(key, lat, lng)),
+  loadRewards: async () => set({ rewards: await api.rewards() }),
+  cashout: async (method: string, destination: string) => {
+    const rewards = await api.cashout(method, destination);
+    set({ rewards, wallet: state.wallet ? { ...state.wallet, points: rewards.points } : state.wallet });
+  },
   /** Forget everything (sign out / account deleted). */
   reset: () => {
     loaded = false;

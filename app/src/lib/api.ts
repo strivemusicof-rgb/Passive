@@ -11,6 +11,7 @@ import type {
   MapPlotsResponse,
   MissionsResponse,
   PlotDto,
+  RewardsDto,
   RewardResponse,
   UpgradeResponse,
   UserDto,
@@ -104,7 +105,7 @@ export const api = {
   collect: () => request<CollectResponse>('POST', '/collect'),
   upgradePlot: (key: string) =>
     request<UpgradeResponse>('POST', `/plots/${encodeURIComponent(key)}/upgrade`),
-  upgradeStorage: () => request<Omit<CollectResponse, 'collected'>>('POST', '/me/storage/upgrade'),
+  upgradeStorage: () => request<Pick<CollectResponse, 'wallet' | 'income'>>('POST', '/me/storage/upgrade'),
   missions: () => request<MissionsResponse>('GET', '/missions'),
   claimMission: (scope: 'daily' | 'weekly', key: string) =>
     request<RewardResponse>('POST', `/missions/${scope}/${encodeURIComponent(key)}/claim`),
@@ -113,4 +114,7 @@ export const api = {
   checkIn: (key: string, lat: number, lng: number) =>
     request<RewardResponse>('POST', `/plots/${encodeURIComponent(key)}/checkin`, { lat, lng }),
   achievements: () => request<AchievementDto[]>('GET', '/me/achievements'),
+  rewards: () => request<RewardsDto>('GET', '/rewards'),
+  cashout: (method: string, destination: string) =>
+    request<RewardsDto>('POST', '/rewards/cashout', { method, destination }),
 };

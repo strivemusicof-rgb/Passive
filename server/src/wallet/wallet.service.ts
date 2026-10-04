@@ -6,7 +6,7 @@ import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 export type Tx = Prisma.TransactionClient;
-export type CurrencyName = 'coins' | 'gems';
+export type CurrencyName = 'coins' | 'gems' | 'points';
 
 /**
  * The only place that changes balances. Every change is a conditional
@@ -27,17 +27,17 @@ export class WalletService {
   /** Creates the wallet with the welcome bonus the first time it's needed. */
   async ensure(tx: Tx, userId: string): Promise<WalletDto> {
     const existing = await tx.wallet.findUnique({ where: { userId } });
-    if (existing) return { coins: existing.coins, gems: existing.gems };
+    if (existing) return { coins: existing.coins, gems: existing.gems, points: existing.points };
     const { welcomeCoins, welcomeGems } = await this.economy.get();
     // ON CONFLICT: two first requests at once must not both pay the bonus.
-    const created = await tx.$queryRaw<{ coins: number; gems: number }[]>`
+    const created = await tx.$queryRaw<WalletDto[]>`
       INSERT INTO wallets (user_id, coins, gems, updated_at)
       VALUES (${userId}::uuid, ${welcomeCoins}, ${welcomeGems}, now())
       ON CONFLICT (user_id) DO NOTHING
-      RETURNING coins, gems`;
+      RETURNING coins, gems, points`;
     if (created.length === 0) {
       const w = await tx.wallet.findUniqueOrThrow({ where: { userId } });
-      return { coins: w.coins, gems: w.gems };
+      return { coins: w.coins, gems: w.gems, points: w.points };
     }
     await tx.transaction.createMany({
       data: [
@@ -51,17 +51,23 @@ export class WalletService {
   /** Adds (positive) or spends (negative). Throws insufficient_funds instead of going below zero. */
   async change(tx: Tx, userId: string, currency: CurrencyName, amount: number, type: string, ref?: string): Promise<WalletDto> {
     await this.ensure(tx, userId);
+    // One statement per currency: column names can't be query parameters.
     const rows =
       currency === 'coins'
-        ? await tx.$queryRaw<{ coins: number; gems: number }[]>`
+        ? await tx.$queryRaw<WalletDto[]>`
             UPDATE wallets SET coins = coins + ${amount}, updated_at = now()
             WHERE user_id = ${userId}::uuid AND coins + ${amount} >= 0
-            RETURNING coins, gems`
-        : await tx.$queryRaw<{ coins: number; gems: number }[]>`
-            UPDATE wallets SET gems = gems + ${amount}, updated_at = now()
-            WHERE user_id = ${userId}::uuid AND gems + ${amount} >= 0
-            RETURNING coins, gems`;
-    if (rows.length === 0) throw new BadRequestException({ code: 'insufficient_funds' });
+            RETURNING coins, gems, points`
+        : currency === 'gems'
+          ? await tx.$queryRaw<WalletDto[]>`
+              UPDATE wallets SET gems = gems + ${amount}, updated_at = now()
+              WHERE user_id = ${userId}::uuid AND gems + ${amount} >= 0
+              RETURNING coins, gems, points`
+          : await tx.$queryRaw<WalletDto[]>`
+              UPDATE wallets SET points = points + ${amount}, updated_at = now()
+              WHERE user_id = ${userId}::uuid AND points + ${amount} >= 0
+              RETURNING coins, gems, points`;
+    if (rows.length === 0) throw new BadRequestException({ code: currency === 'points' ? 'not_enough_points' : 'insufficient_funds' });
     const wallet = rows[0];
     await tx.transaction.create({
       data: { userId, currency, amount, balanceAfter: wallet[currency], type, ref },

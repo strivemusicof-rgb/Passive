@@ -12,6 +12,7 @@ export default function MoreRoute() {
     <Screen tabs>
       <Text variant="h1">{t('more.title')}</Text>
       <Card>
+        <MenuRow icon="star-outline" label={t('more.rewards')} onPress={() => router.push('/rewards')} />
         <MenuRow icon="clipboard-outline" label={t('more.missions')} onPress={() => router.push('/missions')} />
         <MenuRow icon="storefront-outline" label={t('more.marketplace')} onPress={() => router.push('/marketplace')} />
         <MenuRow icon="trophy-outline" label={t('more.leaderboard')} onPress={() => router.push('/leaderboard')} />

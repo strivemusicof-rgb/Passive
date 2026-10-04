@@ -110,8 +110,8 @@ export class PlotsService {
       let wallet = await this.wallet.change(tx, userId, 'coins', -economy.buildingCost[next], 'building_upgrade', cellKey(cell));
       const updated = await tx.plot.update({ where: { row_col: cell }, data: { buildingLevel: next }, include: withOwner });
       await this.tracker.track(tx, userId, 'upgrade');
-      const { gems } = await this.tracker.addXp(tx, userId, economy.xpFor.upgrade);
-      if (gems > 0) wallet = await this.wallet.ensure(tx, userId);
+      const level = await this.tracker.addXp(tx, userId, economy.xpFor.upgrade);
+      if (level.gems > 0 || level.points > 0) wallet = await this.wallet.ensure(tx, userId);
       return {
         plot: this.ownedDto(updated, userId, economy, await this.neighbourCount(tx, updated)),
         wallet,
@@ -148,8 +148,8 @@ export class PlotsService {
         } else {
           wallet = await this.wallet.change(tx, userId, 'coins', -plotPrice(ownedCount, economy), 'plot_purchase', cellKey(cell));
           await this.tracker.track(tx, userId, 'buyPlot');
-          const { gems } = await this.tracker.addXp(tx, userId, economy.xpFor.buyPlot);
-          if (gems > 0) wallet = await this.wallet.ensure(tx, userId);
+          const level = await this.tracker.addXp(tx, userId, economy.xpFor.buyPlot);
+          if (level.gems > 0 || level.points > 0) wallet = await this.wallet.ensure(tx, userId);
         }
         return {
           plot: this.ownedDto(plot, userId, economy, await this.neighbourCount(tx, plot)),

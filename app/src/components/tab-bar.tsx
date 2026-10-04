@@ -25,6 +25,7 @@ const PARENT: Record<string, string> = {
   profile: 'more',
   settings: 'more',
   badges: 'more',
+  rewards: 'more',
 };
 
 export function TabBar({ state, navigation }: BottomTabBarProps) {

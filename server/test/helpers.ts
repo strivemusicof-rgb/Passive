@@ -4,6 +4,7 @@ import { exportJWK, generateKeyPair, SignJWT, createLocalJWKSet } from 'jose';
 
 import { AppModule } from '../src/app.module.js';
 import { APPLE_ISSUER, AppleVerifier } from '../src/auth/apple.verifier.js';
+import { EconomyService } from '../src/economy/economy.service.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 
 /** Fake Apple: a local RSA key pair stands in for Apple's signing keys. */
@@ -36,6 +37,7 @@ export async function createTestApp(): Promise<{ app: INestApplication; signAppl
     .compile();
   const app = moduleRef.createNestApplication();
   await app.init();
-  await app.get(PrismaService).$executeRawUnsafe('TRUNCATE users, sessions, wallets, transactions, plots, mission_progress, check_ins CASCADE');
+  await app.get(PrismaService).$executeRawUnsafe('TRUNCATE users, sessions, wallets, transactions, plots, mission_progress, check_ins, cashout_requests, economy_config CASCADE');
+  app.get(EconomyService).invalidate();
   return { app, signApple: sign };
 }

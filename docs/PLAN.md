@@ -45,6 +45,12 @@ Repo: `strivemusicof-rgb/Passive` (empty right now, cloned at `/home/user/passiv
 
 ---
 
+### Money rules (decided)
+- **Coins, plots, buildings, boosts and income are never sold for real money.** Real-money purchases are cosmetics only.
+- **⭐ reward points** are the only cash-out currency: from land income (1 ⭐ per 50 coins collected, max 60/day), check-ins, the day-7 streak, weekly missions, level-ups and later partner offers; 150 ⭐/day total. 1,000 ⭐ = €1, cash-out from €5 via PayPal or gift card, reviewed by hand on the admin page. Points can't be traded.
+- Income: rewarded ads + offerwall (cash-reward-friendly network, not AdMob), marketplace fees, cosmetics, sponsors.
+- Before switching rewards on publicly: PayPal Business account + a short check with a Latvian accountant/lawyer (taxes, AML limits).
+
 ### Design (approved mockup, 12 screens)
 The UI follows the user's mockup: dark green theme, rarity colours, isometric plot/building art drawn in code (SVG, swappable for PNG art later), Apple Maps satellite view.
 Added to scope from the mockup: **gems** (second, premium currency), **email login + play as guest**, **weekly missions + achievements**, **marketplace favourites**.
@@ -92,6 +98,7 @@ Map: `react-native-maps` (Apple Maps, free). Only plots inside the visible area 
 | M2 ✅ | Map + plots | Square grid (shared JS), `GET /map/plots` (owned + free cells when zoomed in), plot details, buy (flat price +5% per plot owned, rarity rolled with shown odds), free starter plot at the player's GPS spot, wallet + ledger (moved here from M3, buying needs coins; welcome bonus 1,000 coins + 20 gems), My Lands and top-bar balance from the server |
 | M3 ✅ | Economy | Income per plot = rarity base + building bonus, +5% per owned neighbour (max +40%); Collect all with 8 h storage (upgradeable to 12/16/24 h for coins); buildings Empty→House→Office→Hotel→Tower (500 / 2,500 / 10,000 / 40,000); buying/upgrading collects first so nothing earns for the past; per-player lock makes double-collect impossible. Balance: common plot 48/day (~3-day payback), all numbers in economy config |
 | M4 ✅ | Retention | Daily + weekly missions (reset at Riga midnight / Monday) with Claim, 7-day login streak (coins/gems, resets after a missed day), XP + levels (5 gems per level), check-in bonus within 100 m of your own plot (25% of its daily income, once per plot per day, max 10/day), derived achievements + Badges screen, local "storage full" reminder (expo-notifications, no push server) |
+| R ✅ | Rewards | ⭐ points (wallet + ledger, never negative), land income → ⭐ with caps, ⭐ for check-ins/streak/weekly missions/levels, Rewards screen, cash-out requests (real account, 7-day-old account, one at a time, points held/refunded), admin page with token (approve/reject/mark paid, warning signs, rewards on/off), cosmetics-only Shop |
 | M5 | Marketplace | List / cancel / buy (atomic), 5% fee, price limits, history, My Lands |
 | M6 | TestFlight beta | Leaderboard (plots / net worth, LV), tutorial, VPS deploy + HTTPS + daily backups, EAS build → TestFlight for friends |
 | later | Phase 6+ from the document | Rewarded ads (AdMob with server-side checks), IAP, admin web app, districts, events, Baltic expansion, Android |

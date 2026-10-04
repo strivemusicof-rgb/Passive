@@ -24,10 +24,25 @@ export function GemIcon({ size = 16 }: { size?: number }) {
   );
 }
 
+/** ⭐ reward point (the cash-out currency). */
+export function PointsIcon({ size = 16 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 20 20">
+      <Path
+        d="M10 1.2l2.6 5.4 5.9.8-4.3 4.1 1 5.9L10 14.6l-5.2 2.8 1-5.9L1.5 7.4l5.9-.8z"
+        fill="#FFD23F"
+        stroke="#E09A00"
+        strokeWidth="1"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 type AmountProps = Omit<AppTextProps, 'children'> & {
   value: number | string;
   suffix?: string;
-  icon?: 'coin' | 'gem';
+  icon?: 'coin' | 'gem' | 'points';
   iconSize?: number;
 };
 
@@ -36,7 +51,7 @@ export function Amount({ value, suffix, icon = 'coin', iconSize = 15, variant = 
   const text = typeof value === 'number' ? formatNumber(value) : value;
   return (
     <View style={styles.row}>
-      {icon === 'coin' ? <CoinIcon size={iconSize} /> : <GemIcon size={iconSize} />}
+      {icon === 'coin' ? <CoinIcon size={iconSize} /> : icon === 'gem' ? <GemIcon size={iconSize} /> : <PointsIcon size={iconSize} />}
       <Text variant={variant} {...rest}>
         {text}
         {suffix}

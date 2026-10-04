@@ -49,6 +49,7 @@ model User {
   plots        Plot[]
   missions     MissionProgress[]
   checkIns     CheckIn[]
+  cashouts     CashoutRequest[]
 
   @@map("users")
 }
@@ -73,6 +74,8 @@ model Wallet {
   /// Never negative: enforced by a CHECK constraint in the migration.
   coins     Int      @default(0)
   gems      Int      @default(0)
+  /// Reward points: earned only by free activity, never bought or traded; the only cash-out currency.
+  points    Int      @default(0)
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("wallets")
@@ -81,6 +84,7 @@ model Wallet {
 enum Currency {
   coins
   gems
+  points
 }
 
 /// Ledger: one row for every change to a wallet. The balance must always
@@ -151,4 +155,34 @@ model CheckIn {
   @@id([userId, row, col, day])
   @@index([userId, day])
   @@map("check_ins")
+}
+
+enum CashoutStatus {
+  pending
+  approved
+  paid
+  rejected
+}
+
+/// A player asking to turn reward points into money. Points are held when
+/// the request is made and given back if it's rejected.
+model CashoutRequest {
+  id          String        @id @default(uuid()) @db.Uuid
+  userId      String        @map("user_id") @db.Uuid
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  points      Int
+  eurCents    Int           @map("eur_cents")
+  /// "paypal" or a gift card type
+  method      String
+  /// PayPal email (or where to send the gift card)
+  destination String
+  status      CashoutStatus @default(pending)
+  /// Reason shown to the player when rejected
+  note        String?
+  createdAt   DateTime      @default(now()) @map("created_at")
+  decidedAt   DateTime?     @map("decided_at")
+
+  @@index([status, createdAt])
+  @@index([userId])
+  @@map("cashout_requests")
 }

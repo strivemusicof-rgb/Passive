@@ -15,6 +15,8 @@ const EnvSchema = z
     REFRESH_TOKEN_DAYS: z.coerce.number().int().positive().default(60),
     /** Sign in with Apple tokens must be issued for this app. */
     APPLE_BUNDLE_ID: z.string().default('lv.landrush.app'),
+    /** Secret for the admin page (/admin). Leave unset to switch the admin page off. */
+    ADMIN_TOKEN: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(32).optional()),
   })
   .refine((e) => e.NODE_ENV !== 'production' || e.JWT_SECRET !== DEV_JWT_SECRET, {
     message: 'JWT_SECRET must be set in production',

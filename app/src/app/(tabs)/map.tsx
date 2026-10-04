@@ -98,7 +98,7 @@ export default function MapRoute() {
         onPress={({ lat, lng }) => openCell(lat, lng)}
       />
 
-      {/* Top bar: level, coins, gems */}
+      {/* Top bar: level, coins, gems, ⭐ (tap ⭐ for Rewards) */}
       <View style={[styles.topBar, { paddingTop: insets.top + S.xs }]}>
         <Pressable style={styles.level} onPress={() => router.push('/profile')}>
           <Avatar name={user?.displayName ?? '?'} size={38} ring={C.green} />
@@ -108,10 +108,19 @@ export default function MapRoute() {
           </View>
         </Pressable>
         <View style={styles.balances}>
-          <Amount value={wallet?.coins ?? '–'} variant="h3" iconSize={20} />
-          <Amount value={wallet?.gems ?? '–'} icon="gem" variant="h3" iconSize={18} />
-          <Pressable style={styles.plus} onPress={() => router.push('/shop')}>
-            <Ionicons name="add" size={16} color="#06200D" />
+          <Amount value={wallet?.coins ?? '–'} variant="bodyBold" iconSize={18} />
+          <Amount value={wallet?.gems ?? '–'} icon="gem" variant="bodyBold" iconSize={16} />
+          <Pressable
+            onPress={() => router.push('/rewards')}
+            hitSlop={8}
+            accessibilityLabel={t('rewards.title')}>
+            <Amount
+              value={wallet?.points ?? '–'}
+              icon="points"
+              variant="bodyBold"
+              iconSize={18}
+              color={C.coin}
+            />
           </Pressable>
         </View>
       </View>
@@ -194,15 +203,7 @@ const styles = StyleSheet.create({
   },
   level: { flexDirection: 'row', alignItems: 'center', gap: S.sm },
   levelText: { width: 54, gap: 4 },
-  balances: { flexDirection: 'row', alignItems: 'center', gap: S.lg },
-  plus: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: C.green,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  balances: { flexDirection: 'row', alignItems: 'center', gap: S.md },
   collect: { position: 'absolute', alignSelf: 'center' },
   hint: {
     position: 'absolute',

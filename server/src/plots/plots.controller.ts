@@ -52,7 +52,7 @@ export class PlotsController {
 
   @Post('me/storage/upgrade')
   @HttpCode(200)
-  upgradeStorage(@UserId() userId: string): Promise<Omit<CollectResponse, 'collected'>> {
+  upgradeStorage(@UserId() userId: string): Promise<Pick<CollectResponse, 'wallet' | 'income'>> {
     return this.income.upgradeStorage(userId);
   }
 

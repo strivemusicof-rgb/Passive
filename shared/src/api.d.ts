@@ -45,11 +45,19 @@ export type ApiErrorCode =
   | 'not_complete'
   | 'already_checked_in'
   | 'too_far'
-  | 'check_in_limit';
+  | 'check_in_limit'
+  | 'rewards_disabled'
+  | 'guest_cannot_cashout'
+  | 'account_too_new'
+  | 'not_enough_points'
+  | 'cashout_pending'
+  | 'invalid_destination';
 
 export interface WalletDto {
   coins: number;
   gems: number;
+  /** ⭐ reward points: earned for free only; the one currency that can be cashed out. */
+  points: number;
 }
 
 /** One grid cell, owned or free. `key` is "row_col". */
@@ -113,6 +121,8 @@ export interface IncomeDto {
 
 export interface CollectResponse {
   collected: number;
+  /** ⭐ reward points this collect turned into (0 if rewards are off or capped). */
+  points: number;
   wallet: WalletDto;
   income: IncomeDto;
 }
@@ -154,6 +164,8 @@ export interface DailyRewardDto {
 export interface RewardResponse {
   coins: number;
   gems: number;
+  /** ⭐ reward points given (0 when rewards are off or today's cap is reached). */
+  points: number;
   xp: number;
   leveledUp: boolean;
   wallet: WalletDto;
@@ -165,4 +177,45 @@ export interface AchievementDto {
   unlocked: boolean;
   progress: number;
   target: number;
+}
+
+export type CashoutStatus = 'pending' | 'approved' | 'paid' | 'rejected';
+
+export interface CashoutRequestDto {
+  id: string;
+  points: number;
+  eurCents: number;
+  method: string;
+  destination: string;
+  status: CashoutStatus;
+  note: string | null;
+  createdAt: string;
+}
+
+/** GET /rewards: everything the Rewards screen needs. */
+export interface RewardsDto {
+  /** False until rewards are switched on (or the player is a tester). */
+  enabled: boolean;
+  points: number;
+  pointsPerEuro: number;
+  minCashoutPoints: number;
+  /** Points earned today from free play, and the daily limit. */
+  todayEarned: number;
+  /** Of which from collecting land income (limited by earn.landDailyCap). */
+  todayLand: number;
+  dailyCap: number;
+  earn: {
+    checkIn: number;
+    streakDay7: number;
+    weeklyMission: number;
+    levelUp: number;
+    landCoinsPerPoint: number;
+    landDailyCap: number;
+  };
+  methods: string[];
+  /** Why cash-out isn't possible yet (null = it is). */
+  cashoutBlocked: 'rewards_disabled' | 'guest_cannot_cashout' | 'account_too_new' | 'not_enough_points' | 'cashout_pending' | null;
+  /** Recent point changes, newest first. */
+  history: { amount: number; type: string; createdAt: string }[];
+  requests: CashoutRequestDto[];
 }

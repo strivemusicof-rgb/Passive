@@ -7,13 +7,14 @@ import { plotIncomePerDay } from '../economy/income.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { IncomeService, ownedNeighbours } from '../income/income.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { RewardsService } from '../rewards/rewards.service.js';
 import { toUserDto } from '../users/users.service.js';
 import { WalletService, type Tx } from '../wallet/wallet.service.js';
 import { nextStreakDay } from './levels.js';
 import { dailyPeriod, gameDay, nextResets, previousDay, weeklyPeriod } from './periods.js';
 import { TrackerService } from './tracker.service.js';
 
-type Gain = { coins: number; gems: number; xp: number };
+type Gain = { coins: number; gems: number; xp: number; points?: number };
 
 @Injectable()
 export class ProgressService {
@@ -23,6 +24,7 @@ export class ProgressService {
     private readonly wallet: WalletService,
     private readonly income: IncomeService,
     private readonly tracker: TrackerService,
+    private readonly rewards: RewardsService,
   ) {}
 
   async missions(userId: string, now = new Date()): Promise<MissionsResponse> {
@@ -59,7 +61,8 @@ export class ProgressService {
         const row = await tx.missionProgress.findUnique({ where: { userId_period_key: { userId, period, key } } });
         throw new BadRequestException({ code: row?.claimedAt ? 'already_claimed' : 'not_complete' });
       }
-      return this.pay(tx, userId, { coins: def.coins, gems: def.gems, xp: def.xp }, 'mission_reward', `${period}:${key}`);
+      const points = scope === 'weekly' ? await this.rewards.award(tx, userId, economy.rewards.earn.weeklyMission, 'weekly_mission', `${period}:${key}`) : 0;
+      return this.pay(tx, userId, { coins: def.coins, gems: def.gems, xp: def.xp, points }, 'mission_reward', `${period}:${key}`);
     });
   }
 
@@ -87,7 +90,8 @@ export class ProgressService {
       await tx.user.update({ where: { id: userId }, data: { streakDay: day, lastDailyClaim: today } });
       await this.tracker.track(tx, userId, 'login', 1, now);
       const reward = economy.dailyRewards[day - 1] ?? { coins: 0, gems: 0 };
-      return this.pay(tx, userId, { ...reward, xp: economy.xpFor.dailyReward }, 'daily_reward', `${today}:day${day}`);
+      const points = day === 7 ? await this.rewards.award(tx, userId, economy.rewards.earn.streakDay7, 'streak', today) : 0;
+      return this.pay(tx, userId, { ...reward, xp: economy.xpFor.dailyReward, points }, 'daily_reward', `${today}:day${day}`);
     });
     return { ...res, daily: await this.daily(userId, now) };
   }
@@ -119,7 +123,8 @@ export class ProgressService {
         throw e;
       }
       await this.tracker.track(tx, userId, 'checkIn', 1, now);
-      return this.pay(tx, userId, { coins, gems: 0, xp: economy.xpFor.checkIn }, 'check_in', `${day}:${cellKey(cell)}`);
+      const points = await this.rewards.award(tx, userId, economy.rewards.earn.checkIn, 'check_in', `${day}:${cellKey(cell)}`);
+      return this.pay(tx, userId, { coins, gems: 0, xp: economy.xpFor.checkIn, points }, 'check_in', `${day}:${cellKey(cell)}`);
     });
   }
 
@@ -153,9 +158,18 @@ export class ProgressService {
     if (gain.coins > 0) wallet = await this.wallet.change(tx, userId, 'coins', gain.coins, type, ref);
     if (gain.gems > 0) wallet = await this.wallet.change(tx, userId, 'gems', gain.gems, type, ref);
     const level = await this.tracker.addXp(tx, userId, gain.xp);
-    if (level.gems > 0) wallet = await this.wallet.ensure(tx, userId);
+    // Points (and level-up gems) were added by other services: re-read the wallet.
+    if (level.gems > 0 || level.points > 0 || (gain.points ?? 0) > 0) wallet = await this.wallet.ensure(tx, userId);
     const user = await tx.user.findUniqueOrThrow({ where: { id: userId } });
-    return { coins: gain.coins, gems: gain.gems + level.gems, xp: gain.xp, leveledUp: level.leveledUp, wallet, user: toUserDto(user) };
+    return {
+      coins: gain.coins,
+      gems: gain.gems + level.gems,
+      points: (gain.points ?? 0) + level.points,
+      xp: gain.xp,
+      leveledUp: level.leveledUp,
+      wallet,
+      user: toUserDto(user),
+    };
   }
 }
 

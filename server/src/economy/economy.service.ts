@@ -62,6 +62,33 @@ export const ECONOMY_DEFAULTS = {
   levelUpGems: 5,
   /** Standing at your own plot: once per plot per day. */
   checkIn: { radiusM: 100, rewardShare: 0.25, maxPerDay: 10 },
+  /**
+   * ⭐ reward points: the only currency that can be cashed out. Land income
+   * turns into points, so coins/plots/income must NEVER be sold for real
+   * money (no coin packs, no paid boosts; cosmetics only). Daily caps keep
+   * payouts below ad income. `enabled` is the public switch; `testers`
+   * (user ids or emails) get it early.
+   */
+  rewards: {
+    enabled: false,
+    testers: [] as string[],
+    pointsPerEuro: 1000,
+    minCashoutPoints: 5000,
+    minAccountAgeDays: 7,
+    /** Total ⭐ per day from everything below. */
+    dailyCap: 150,
+    earn: {
+      checkIn: 5,
+      streakDay7: 50,
+      weeklyMission: 20,
+      levelUp: 25,
+      /** Collecting land income: 1 ⭐ per this many coins collected … */
+      landCoinsPerPoint: 50,
+      /** … up to this many ⭐ a day from land. */
+      landDailyCap: 60,
+    },
+    methods: ['paypal', 'giftcard'],
+  },
   /** Landmarks where buying gives better rarity odds. */
   hotspots: [
     { name: 'Riga Old Town', lat: 56.9488, lng: 24.1064, radiusM: 700, boost: 1.0 },

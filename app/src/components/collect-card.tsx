@@ -23,10 +23,12 @@ export function CollectCard({ style }: { style?: StyleProp<ViewStyle> }) {
   const collect = async () => {
     setBusy(true);
     try {
-      const got = await game.collect();
-      setMessage({ text: got > 0 ? `+${formatNumber(got)}` : t('collect.nothing') });
+      const { collected, points } = await game.collect();
+      setMessage({
+        text: collected > 0 ? `+${formatNumber(collected)}${points > 0 ? `  ·  +${points} ⭐` : ''}` : t('collect.nothing'),
+      });
       // After the first collect, offer a reminder for when storage is full again.
-      if (got > 0 && (await allowReminders())) scheduleStorageFull(game.snapshot().income?.fullAt ?? null);
+      if (collected > 0 && (await allowReminders())) scheduleStorageFull(game.snapshot().income?.fullAt ?? null);
     } catch (e) {
       setMessage({ text: errorMessage(t, e), error: true });
     } finally {

@@ -186,6 +186,23 @@ cd /opt/landrush && git pull && cd deploy && docker compose up -d --build
 
 Database changes are applied automatically when the server starts.
 
+### Admin page (cash-out reviews)
+
+Once, on the VPS, create the admin password (it goes straight into the file; you see it once to copy it into your password manager):
+
+```bash
+cd /opt/landrush/deploy
+echo "ADMIN_TOKEN=$(openssl rand -hex 32)" >> .env
+grep ADMIN_TOKEN .env
+docker compose up -d
+```
+
+Open **https://vps-1a18ee51.vps.ovh.net/landrush/admin**, paste the token. There you:
+- turn **Rewards ON/OFF** for everyone (off until your PayPal Business account and the accountant/lawyer check are ready),
+- review cash-out requests: **Approve** → send the money from PayPal Business to the shown email → **Mark paid**, or **Reject** (points go back to the player). Warning signs (new account, payout address shared by several accounts…) are shown on each request.
+
+To let only testers use rewards while it's off, add their email or user id to `testers` in the `rewards` economy setting.
+
 ---
 
 ## Part 2: iPhone build (Windows PC)

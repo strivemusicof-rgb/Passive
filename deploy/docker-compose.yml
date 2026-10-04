@@ -29,6 +29,8 @@ services:
       MIN_APP_VERSION: ${MIN_APP_VERSION:-0.1.0}
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in deploy/.env}
       APPLE_BUNDLE_ID: lv.landrush.app
+      # Secret for https://<server>/landrush/admin (cash-out reviews). Empty = admin page off.
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
     # Only reachable from the VPS itself; Nginx handles HTTPS in front of it.
     ports:
       - '127.0.0.1:3100:3000'
