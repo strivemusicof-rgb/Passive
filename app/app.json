@@ -41,6 +41,12 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "backgroundColor": "#070D0B"
+    "backgroundColor": "#070D0B",
+    "owner": "strivemusicof",
+    "extra": {
+      "eas": {
+        "projectId": "b9d1d966-d874-416c-8d80-063207aa73c3"
+      }
+    }
   }
 }
