@@ -1,0 +1,20 @@
+# Build from the repo root:  docker build -f deploy/Dockerfile.server .
+FROM node:22-alpine AS build
+RUN corepack enable
+WORKDIR /repo
+COPY . .
+RUN pnpm install --frozen-lockfile --filter server... \
+ && pnpm --filter server build \
+ && pnpm --filter server deploy --prod --legacy --ignore-scripts /out \
+ && cp -r server/dist /out/
+
+FROM node:22-alpine
+RUN apk add --no-cache openssl
+ENV NODE_ENV=production
+WORKDIR /srv
+COPY --from=build /out .
+# Download Prisma's migration engine at build time, not on every start.
+RUN npx prisma --version
+EXPOSE 3000
+# Apply pending database migrations, then start the API.
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]

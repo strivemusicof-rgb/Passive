@@ -1,0 +1,9 @@
+packages:
+  - app
+  - server
+  - shared
+
+onlyBuiltDependencies:
+  - '@prisma/engines'
+  - prisma
+  - unrs-resolver
