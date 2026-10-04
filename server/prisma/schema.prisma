@@ -35,7 +35,12 @@ model User {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
   lastSeenAt   DateTime  @default(now()) @map("last_seen_at")
+  /// The one free plot every player gets.
+  starterClaimed Boolean @default(false) @map("starter_claimed")
   sessions     Session[]
+  wallet       Wallet?
+  transactions Transaction[]
+  plots        Plot[]
 
   @@map("users")
 }
@@ -52,4 +57,60 @@ model Session {
 
   @@index([userId])
   @@map("sessions")
+}
+
+model Wallet {
+  userId    String   @id @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Never negative: enforced by a CHECK constraint in the migration.
+  coins     Int      @default(0)
+  gems      Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("wallets")
+}
+
+enum Currency {
+  coins
+  gems
+}
+
+/// Ledger: one row for every change to a wallet. The balance must always
+/// equal the sum of a player's rows.
+model Transaction {
+  id           BigInt   @id @default(autoincrement())
+  userId       String   @map("user_id") @db.Uuid
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currency     Currency
+  /// Positive = received, negative = spent.
+  amount       Int
+  balanceAfter Int      @map("balance_after")
+  /// e.g. welcome_bonus, plot_purchase
+  type         String
+  /// What the change was for, e.g. the plot "row_col".
+  ref          String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@map("transactions")
+}
+
+/// Only bought plots are stored; every other grid cell is free.
+model Plot {
+  row           Int
+  col           Int
+  /// Public number shown as "#8472", assigned on first purchase.
+  number        Int      @unique @default(autoincrement())
+  ownerId       String   @map("owner_id") @db.Uuid
+  owner         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  /// Fixed when first bought, so later hotspot changes don't affect it.
+  rarity        String
+  buildingLevel Int      @default(0) @map("building_level")
+  name          String?
+  acquiredAt    DateTime @default(now()) @map("acquired_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@id([row, col])
+  @@index([ownerId])
+  @@map("plots")
 }

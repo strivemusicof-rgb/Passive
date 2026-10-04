@@ -1,5 +1,6 @@
 const en = {
   common: {
+    comingSoon: 'Coming in the next update.',
     perDay: '/day',
     perHour: '/h',
     coinsPerHour: 'Coins/h',
@@ -44,6 +45,8 @@ const en = {
     legal: 'By continuing, you agree to our\nTerms of Service and Privacy Policy.',
   },
   tutorial: {
+    claim: 'Claim my free plot',
+    claimed: 'Plot #{{number}} is yours!',
     step: '{{step}}/{{total}}',
     s1Title: 'Your First Plot',
     s1Body: "Let's get you started!\nThis is a land plot. Tap to claim\nyour free starter land.",
@@ -55,12 +58,23 @@ const en = {
     s4Body: 'Sell plots on the Marketplace\nand buy land from other players.',
   },
   map: {
+    zoomIn: 'Zoom in to see free plots',
+    myLocation: 'My location',
     collect: 'Collect',
     missions: 'Missions',
     market: 'Market',
     profile: 'Profile',
   },
   plot: {
+    odds: 'Your chances',
+    oddsHint: 'Rarity is decided when you buy. Rarer plots earn more.',
+    landmark: 'Landmark nearby: better chances!',
+    revealTitle: 'You got a',
+    free: 'Free plot',
+    nobody: 'Nobody',
+    price: 'Price',
+    buyFor: 'Buy for {{price}}',
+    notEnough: 'Not enough coins',
     owned: 'Owned',
     baseIncome: 'Base Income',
     building: 'Building',
@@ -73,6 +87,8 @@ const en = {
     sell: 'Sell on Marketplace',
   },
   lands: {
+    empty: 'You don’t own any land yet.',
+    goToMap: 'Find land on the map',
     title: 'My Lands',
     count: '{{count}} plots',
     totalIncome: 'Total Income',
@@ -162,6 +178,14 @@ const en = {
     switchToLogin: 'Already have an account? Log in',
   },
   errors: {
+    plot_taken: 'Someone else just bought this plot.',
+    insufficient_funds: 'Not enough coins.',
+    starter_already_claimed: 'You already have your free plot.',
+    no_free_plot_nearby: 'No free plot nearby. Try another place.',
+    invalid_plot: 'This plot doesn’t exist.',
+    area_too_large: 'Zoom in to see plots.',
+    unauthorized: 'Please sign in again.',
+    invalid_refresh_token: 'Please sign in again.',
     invalid_credentials: 'Wrong email or password.',
     email_taken: 'This email is already registered.',
     name_taken: 'This name is already taken.',

@@ -18,7 +18,7 @@ Repo: `strivemusicof-rgb/Passive` (empty right now, cloned at `/home/user/passiv
 | Topic | Document says | Change | Why |
 |---|---|---|---|
 | Land grid | "plots based on coordinates" | **Square grid** (~33 m plots, matches the design mockup). Grid math lives in `shared/src/grid.ts`, used by app and server. | Every place on Earth already has a plot ID, so **plots don't need to be stored until someone buys them**. |
-| Rarity | stored per plot | **Calculated from the plot ID** (hash of ID + secret seed), plus admin-defined **hotspots** (Old Town, Jūrmala beach, Freedom Monument) that raise the odds of rarer plots | Nothing needs to be generated for the whole world, and famous places feel special. |
+| Rarity | stored per plot | **Rolled when you buy.** Every free plot costs the same; the exact odds are shown before buying (Apple 3.1.1). **Landmarks** (Old Town, Freedom Monument, Jūrmala beach…) give better odds. | Exciting reveal moment, fair for everyone, and location still matters. Odds are server config. |
 | Income collection | collect each plot | **One "Collect all" button + a storage limit** (8 h at the start, upgradeable) | Short sessions, and "your storage is full!" is the push notification that brings players back. |
 | Coin sinks | not covered | Each new plot costs a bit more than the last (soft cap), upgrades, 5% market fee, cosmetic name/skin changes | Without ways to spend coins, prices inflate and the economy breaks within weeks. |
 | Marketplace anti-fraud | "anti-fraud limits" | Price must stay within **0.5×–20× of the plot's base value**. Accounts under 3 days old can't list. Daily trade limit. | Stops people moving coins between their own accounts and blocks bots. |
@@ -89,8 +89,8 @@ Map: `react-native-maps` (Apple Maps, free). Only plots inside the visible area 
 | M0 ✅ | Foundation | Monorepo, Expo app skeleton + tabs + LV/RU/EN i18n, NestJS + Prisma + Postgres via Docker Compose, health endpoint, CLAUDE.md, CI (lint + tests) |
 | UI ✅ | Mockup screens | All 12 mockup screens + Shop/More/Settings, built with mock data (`app/src/mock/data.ts`) |
 | M1 ✅ | Accounts | Sign in with Apple (server verifies Apple's token), email + password, guest accounts (upgrade to Apple/email keeps progress), 15-min access JWT + rotating refresh tokens in the Keychain, `/me` GET/PATCH/DELETE, rate limits. **Later:** password reset (needs an email sender), revoking Apple tokens on account deletion (needs the Apple .p8 key on the server). |
-| M2 | Map + plots | Square grid service, `GET /map/plots?bbox`, rarity + hotspots, starter plot from GPS, plot sheet, buy plot |
-| M3 | Economy | Wallet + ledger, buildings 0–4 (Empty→Tower) from config, upgrade, collect all + storage cap, neighbour bonus |
+| M2 ✅ | Map + plots | Square grid (shared JS), `GET /map/plots` (owned + free cells when zoomed in), plot details, buy (flat price +5% per plot owned, rarity rolled with shown odds), free starter plot at the player's GPS spot, wallet + ledger (moved here from M3, buying needs coins; welcome bonus 1,000 coins + 20 gems), My Lands and top-bar balance from the server |
+| M3 | Economy | buildings 0–4 (Empty→Tower) from config, upgrade, collect all + storage cap, neighbour bonus |
 | M4 | Retention | Daily missions, 7-day login streak, XP/levels, check-in bonus, local push "storage full" |
 | M5 | Marketplace | List / cancel / buy (atomic), 5% fee, price limits, history, My Lands |
 | M6 | TestFlight beta | Leaderboard (plots / net worth, LV), tutorial, VPS deploy + HTTPS + daily backups, EAS build → TestFlight for friends |

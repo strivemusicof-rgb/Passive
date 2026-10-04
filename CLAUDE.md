@@ -5,7 +5,7 @@ Location-based land game. iOS first. Plan and milestones: `docs/PLAN.md` (update
 ## Layout
 - `app/`: Expo SDK 57 + Expo Router (routes in `app/src/app/`). Read `app/AGENTS.md` before touching Expo APIs.
 - `server/`: NestJS 12 (ESM, `.js` import suffixes) + Prisma 7 (`server/prisma/schema.prisma`, client generated to `server/src/generated/`, not committed).
-- `shared/`: plain TypeScript types/constants with no runtime dependencies, imported as `@landrush/shared`.
+- `shared/`: runtime code is plain `.js` with `.d.ts` types (no build step; Node runs it from node_modules, Metro bundles it). `@landrush/shared` = constants + API types, `@landrush/shared/grid` = plot grid math.
 - `deploy/`: Docker Compose stack for the OVH VPS (API on 127.0.0.1:3100 behind Nginx).
 
 ## Rules

@@ -1,10 +1,15 @@
 import type {
   ApiErrorCode,
   AuthResponse,
+  BuyPlotResponse,
   HealthResponse,
   Language,
+  MapPlotsResponse,
+  PlotDto,
   UserDto,
+  WalletDto,
 } from '@landrush/shared';
+import type { CellBounds } from '@landrush/shared/grid';
 
 /** Set EXPO_PUBLIC_API_URL in app/.env (dev) or eas.json (builds). */
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
@@ -77,4 +82,15 @@ export const api = {
   updateMe: (data: { displayName?: string; language?: Language }) =>
     request<UserDto>('PATCH', '/me', data),
   deleteMe: () => request<void>('DELETE', '/me'),
+  wallet: () => request<WalletDto>('GET', '/wallet'),
+  mapPlots: (b: CellBounds) =>
+    request<MapPlotsResponse>(
+      'GET',
+      `/map/plots?south=${b.south}&west=${b.west}&north=${b.north}&east=${b.east}`,
+    ),
+  plot: (key: string) => request<PlotDto>('GET', `/plots/${encodeURIComponent(key)}`),
+  buyPlot: (key: string) => request<BuyPlotResponse>('POST', `/plots/${encodeURIComponent(key)}/buy`),
+  claimStarter: (lat: number, lng: number) =>
+    request<BuyPlotResponse>('POST', '/plots/starter', { lat, lng }),
+  myPlots: () => request<PlotDto[]>('GET', '/me/plots'),
 };

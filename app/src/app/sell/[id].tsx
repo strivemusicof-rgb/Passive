@@ -1,9 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, TextInput, View } from 'react-native';
 
-import { PlotArt } from '@/components/art/plot-art';
+import { BUILDING_BY_LEVEL, PlotArt } from '@/components/art/plot-art';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Amount, CoinIcon, formatNumber } from '@/components/ui/currency';
@@ -12,28 +12,36 @@ import { RarityBadge } from '@/components/ui/rarity-badge';
 import { Screen } from '@/components/ui/screen';
 import { Text } from '@/components/ui/text';
 import { C, R, S } from '@/constants/theme';
-import { findPlot, MARKET_FEE } from '@/mock/data';
+import { usePlot } from '@/lib/use-plot';
+import { MARKET_FEE } from '@/mock/data';
 
-/** 8. Sell land. */
+/** 8. Sell land. Listing goes live with the marketplace (M5). */
 export default function SellRoute() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const plot = findPlot(Number(id));
+  const { plot, place } = usePlot(id);
   const [price, setPrice] = useState('4500');
   const value = Number(price) || 0;
   const fee = Math.round(value * MARKET_FEE);
+  if (!plot)
+    return (
+      <Screen>
+        <ActivityIndicator color={C.green} />
+      </Screen>
+    );
+  const kind = BUILDING_BY_LEVEL[plot.buildingLevel] ?? 'empty';
 
   return (
     <Screen>
       <Header title={t('sell.title')} close />
       <Card style={styles.plot}>
         <View style={styles.thumb}>
-          <PlotArt kind={plot.building} size={110} />
+          <PlotArt kind={kind} size={110} />
         </View>
         <View style={styles.plotInfo}>
-          <Text variant="h3">{t('common.plotId', { id: plot.id })}</Text>
+          <Text variant="h3">{t('common.plotId', { id: plot.number })}</Text>
           <Text variant="small" color={C.textSecondary}>
-            {plot.city}
+            {place ?? `${plot.lat.toFixed(4)}, ${plot.lng.toFixed(4)}`}
           </Text>
           <RarityBadge rarity={plot.rarity} />
           <Amount value={plot.incomePerDay} suffix={t('common.perDay')} />
@@ -67,7 +75,15 @@ export default function SellRoute() {
         </View>
       </Card>
 
-      <Button title={t('sell.list')} style={styles.cta} onPress={() => router.back()} />
+      <Button
+        title={t('sell.list')}
+        style={styles.cta}
+        onPress={() =>
+          Alert.alert(t('sell.list'), t('common.comingSoon'), [
+            { text: 'OK', onPress: () => router.back() },
+          ])
+        }
+      />
       <Text variant="tiny" color={C.textMuted} center style={styles.note}>
         {t('sell.visible')}
       </Text>
@@ -77,7 +93,14 @@ export default function SellRoute() {
 
 const styles = StyleSheet.create({
   plot: { flexDirection: 'row', padding: S.md, gap: S.md, alignItems: 'center' },
-  thumb: { width: 110, height: 100, borderRadius: R.sm, backgroundColor: '#0B1310', alignItems: 'center', justifyContent: 'center' },
+  thumb: {
+    width: 110,
+    height: 100,
+    borderRadius: R.sm,
+    backgroundColor: '#0B1310',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   plotInfo: { flex: 1, gap: 6 },
   priceCard: { padding: S.lg, gap: S.md },
   input: {
@@ -92,7 +115,13 @@ const styles = StyleSheet.create({
     backgroundColor: C.bg,
   },
   inputText: { flex: 1, minWidth: 0, color: C.text, fontSize: 22, fontWeight: '700' },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: S.lg, height: 50 },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: S.lg,
+    height: 50,
+  },
   border: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: C.divider },
   cta: { marginTop: S.lg },
   note: { lineHeight: 16, fontWeight: '500' },

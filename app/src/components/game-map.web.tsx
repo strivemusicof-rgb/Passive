@@ -1,55 +1,118 @@
-// Web preview only (react-native-maps has no web support). Draws the plot
-// squares on a dark "satellite-like" background so layouts can be checked in
-// a browser. The iPhone app uses game-map.tsx.
-import { forwardRef, useImperativeHandle } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+// Web preview only (react-native-maps has no web support). A flat map with
+// the plot squares, so flows can be tested in a browser. Tapping works; the
+// view can't be dragged. The iPhone app uses game-map.tsx (Apple Maps).
+import { cellBounds } from '@landrush/shared/grid';
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import { Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 
 import { RARITY_COLORS } from '@/constants/theme';
 
-import type { GameMapHandle, MapPlot } from './game-map';
+import type { GameMapHandle, GameMapProps, LatLng, MapCell } from './game-map';
 
-export type { GameMapHandle, MapPlot };
+export type { GameMapHandle, LatLng, MapCell };
 
-type Props = { plots: MapPlot[]; center: { lat: number; lng: number }; onPlotPress?: (id: number) => void };
+const C_FREE = '#FFFFFF';
+const C_LANDMARK = '#F6C453';
 
-export const GameMap = forwardRef<GameMapHandle, Props>(function GameMap({ plots, center, onPlotPress }, ref) {
-  useImperativeHandle(ref, () => ({ recenter: () => {} }));
-  const scale = 26000;
+/** Pixels per degree of latitude (a 33 m plot ≈ 36 px). */
+const PX_PER_DEG = 120000;
+
+export const GameMap = forwardRef<GameMapHandle, GameMapProps>(function GameMap(
+  { cells, selectedKey, initialCenter, onRegionChange, onPress },
+  ref,
+) {
+  const [center, setCenter] = useState(initialCenter);
+  const [size, setSize] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const lngScale = Math.cos((center.lat * Math.PI) / 180);
+
+  useImperativeHandle(ref, () => ({ moveTo: (at) => setCenter(at) }));
+
+  useEffect(() => {
+    if (!size) return;
+    const halfLat = size.h / 2 / PX_PER_DEG;
+    const halfLng = size.w / 2 / (PX_PER_DEG * lngScale);
+    onRegionChange({
+      south: center.lat - halfLat,
+      north: center.lat + halfLat,
+      west: center.lng - halfLng,
+      east: center.lng + halfLng,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [size, center]);
+
+  if (!size)
+    return (
+      <View
+        style={[StyleSheet.absoluteFill, styles.bg]}
+        onLayout={(e: LayoutChangeEvent) =>
+          setSize({
+            x: e.nativeEvent.layout.x,
+            y: e.nativeEvent.layout.y,
+            w: e.nativeEvent.layout.width,
+            h: e.nativeEvent.layout.height,
+          })
+        }
+      />
+    );
+
+  const toPx = (lat: number, lng: number) => ({
+    x: size.w / 2 + (lng - center.lng) * PX_PER_DEG * lngScale,
+    y: size.h / 2 - (lat - center.lat) * PX_PER_DEG,
+  });
+
   return (
-    <View style={[StyleSheet.absoluteFill, styles.bg]}>
-      <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
-        <Defs>
-          <LinearGradient id="land" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor="#2B3A2E" />
-            <Stop offset="1" stopColor="#1C2620" />
-          </LinearGradient>
-        </Defs>
-        <Rect width="100%" height="100%" fill="url(#land)" />
-        <Path d="M -20 120 C 120 180, 140 300, 230 420 S 330 640, 300 900" stroke="#1F3D57" strokeWidth={70} fill="none" />
-      </Svg>
-      {plots.map((p) => {
-        const c = RARITY_COLORS[p.rarity].map;
+    <Pressable
+      style={[StyleSheet.absoluteFill, styles.bg]}
+      onPress={(e) => {
+        // react-native-web gives page coordinates; the map is laid out from (x, y).
+        const locationX = e.nativeEvent.pageX - size.x;
+        const locationY = e.nativeEvent.pageY - size.y;
+        onPress({
+          lat: center.lat - (locationY - size.h / 2) / PX_PER_DEG,
+          lng: center.lng + (locationX - size.w / 2) / (PX_PER_DEG * lngScale),
+        });
+      }}>
+      {cells.map((c: MapCell) => {
+        const b = cellBounds(c);
+        const tl = toPx(b.north, b.west);
+        const br = toPx(b.south, b.east);
+        // Owned: rarity colour. Free: thin white outline, faint gold fill near landmarks.
+        const color = c.rarity ? RARITY_COLORS[c.rarity].map : C_FREE;
+        const fill = c.owned
+          ? `${color}${c.mine ? 'AA' : '66'}`
+          : c.boosted
+            ? `${C_LANDMARK}26`
+            : `${C_FREE}0D`;
+        const selected = c.key === selectedKey;
         return (
-          <Pressable
-            key={p.id}
-            onPress={() => onPlotPress?.(p.id)}
+          <View
+            key={c.key}
+            pointerEvents="none"
+            // data attributes help browser tests find plots
+            {...({
+              dataSet: {
+                plot: c.key,
+                owned: String(c.owned),
+                mine: String(c.mine),
+                rarity: c.rarity ?? 'free',
+                boosted: String(c.boosted),
+              },
+            } as object)}
             style={{
               position: 'absolute',
-              left: `${50 + (p.lng - center.lng) * scale * 0.55 / 4}%`,
-              top: `${45 - (p.lat - center.lat) * scale / 4}%`,
-              width: 30,
-              height: 30,
-              transform: [{ rotate: '45deg' }],
-              backgroundColor: `${c}66`,
-              borderColor: c,
-              borderWidth: p.mine ? 2.5 : 1.5,
+              left: tl.x,
+              top: tl.y,
+              width: br.x - tl.x - 1,
+              height: br.y - tl.y - 1,
+              backgroundColor: fill,
+              borderColor: selected ? '#FFFFFF' : `${color}${c.owned ? 'FF' : '40'}`,
+              borderWidth: selected ? 2 : c.owned ? 1.5 : 0.5,
             }}
           />
         );
       })}
-    </View>
+    </Pressable>
   );
 });
 
-const styles = StyleSheet.create({ bg: { backgroundColor: '#1A241E' } });
+const styles = StyleSheet.create({ bg: { backgroundColor: '#1F2A22', overflow: 'hidden' } });

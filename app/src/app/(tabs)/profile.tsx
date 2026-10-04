@@ -13,12 +13,14 @@ import { Screen } from '@/components/ui/screen';
 import { Text } from '@/components/ui/text';
 import { C, S } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
+import { useGame } from '@/lib/game';
 import { me } from '@/mock/data';
 
 /** 12. Profile. */
 export default function ProfileRoute() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { myPlots } = useGame();
   const name = user?.displayName ?? me.name;
   const level = user?.level ?? me.level;
   return (
@@ -51,7 +53,7 @@ export default function ProfileRoute() {
       </View>
 
       <Card style={styles.stats}>
-        <Stat value={me.plots} label={t('profile.plots')} />
+        <Stat value={myPlots?.length ?? 0} label={t('profile.plots')} />
         <View style={styles.vline} />
         <Stat value={me.districts} label={t('profile.districts')} />
         <View style={styles.vline} />

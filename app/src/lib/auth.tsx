@@ -4,6 +4,7 @@ import { useSyncExternalStore } from 'react';
 import i18n from '@/i18n';
 
 import { api, ApiError, setSession } from './api';
+import { game } from './game';
 import { tokenStorage } from './token-storage';
 
 /**
@@ -41,6 +42,7 @@ async function clear() {
   refreshToken = null;
   setSession(null, null);
   await tokenStorage.clear();
+  game.reset();
   set({ status: 'signedOut', user: null, isNewAccount: false });
 }
 
@@ -66,6 +68,7 @@ function refresh(): Promise<string | null> {
 
 /** After sign-in: new accounts take the device language, old ones restore theirs. */
 async function signedIn(res: AuthResponse) {
+  if (state.user && state.user.id !== res.user.id) game.reset();
   const isNew = Date.now() - new Date(res.user.createdAt).getTime() < NEW_ACCOUNT_MS;
   await apply(res, isNew);
   const deviceLang = i18n.language as Language;

@@ -2,6 +2,7 @@ import type { Translations } from './en';
 
 const lv: Translations = {
   common: {
+    comingSoon: 'Būs pieejams nākamajā atjauninājumā.',
     perDay: '/dienā',
     perHour: '/st',
     coinsPerHour: 'monētas/st',
@@ -46,6 +47,8 @@ const lv: Translations = {
     legal: 'Turpinot tu piekrīti mūsu\nLietošanas noteikumiem un Privātuma politikai.',
   },
   tutorial: {
+    claim: 'Saņemt bezmaksas gabalu',
+    claimed: 'Gabals #{{number}} ir tavs!',
     step: '{{step}}/{{total}}',
     s1Title: 'Tavs pirmais zemes gabals',
     s1Body: 'Sāksim!\nŠis ir zemes gabals. Pieskaries, lai\nsaņemtu savu bezmaksas zemi.',
@@ -57,12 +60,23 @@ const lv: Translations = {
     s4Body: 'Pārdod zemi tirgū\nun pērc zemi no citiem spēlētājiem.',
   },
   map: {
+    zoomIn: 'Pietuvini, lai redzētu brīvos gabalus',
+    myLocation: 'Mana atrašanās vieta',
     collect: 'Savākt',
     missions: 'Misijas',
     market: 'Tirgus',
     profile: 'Profils',
   },
   plot: {
+    odds: 'Tavas izredzes',
+    oddsHint: 'Retumu nosaka pirkšanas brīdī. Retāki gabali pelna vairāk.',
+    landmark: 'Tuvumā ir apskates vieta: labākas izredzes!',
+    revealTitle: 'Tu ieguvi',
+    free: 'Brīvs gabals',
+    nobody: 'Neviens',
+    price: 'Cena',
+    buyFor: 'Pirkt par {{price}}',
+    notEnough: 'Nepietiek monētu',
     owned: 'Tavs',
     baseIncome: 'Bāzes ienākumi',
     building: 'Ēka',
@@ -75,6 +89,8 @@ const lv: Translations = {
     sell: 'Pārdot tirgū',
   },
   lands: {
+    empty: 'Tev vēl nav neviena zemes gabala.',
+    goToMap: 'Meklēt zemi kartē',
     title: 'Mana zeme',
     count: '{{count}} gabali',
     totalIncome: 'Kopējie ienākumi',
@@ -164,6 +180,14 @@ const lv: Translations = {
     switchToLogin: 'Jau ir konts? Ienāc',
   },
   errors: {
+    plot_taken: 'Kāds tikko nopirka šo gabalu.',
+    insufficient_funds: 'Nepietiek monētu.',
+    starter_already_claimed: 'Tu jau esi saņēmis bezmaksas gabalu.',
+    no_free_plot_nearby: 'Tuvumā nav brīvu gabalu. Pamēģini citur.',
+    invalid_plot: 'Šāds gabals neeksistē.',
+    area_too_large: 'Pietuvini, lai redzētu gabalus.',
+    unauthorized: 'Lūdzu, pieraksties vēlreiz.',
+    invalid_refresh_token: 'Lūdzu, pieraksties vēlreiz.',
     invalid_credentials: 'Nepareizs e-pasts vai parole.',
     email_taken: 'Šis e-pasts jau ir reģistrēts.',
     name_taken: 'Šis vārds jau ir aizņemts.',

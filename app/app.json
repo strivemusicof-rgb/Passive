@@ -26,7 +26,13 @@
       ],
       "expo-localization",
       "expo-secure-store",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "LANDRUSH uses your location to give you a free starter plot where you are and to show plots near you."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

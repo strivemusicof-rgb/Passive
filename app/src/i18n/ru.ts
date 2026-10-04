@@ -2,6 +2,7 @@ import type { Translations } from './en';
 
 const ru: Translations = {
   common: {
+    comingSoon: 'Появится в следующем обновлении.',
     perDay: '/день',
     perHour: '/ч',
     coinsPerHour: 'монет/ч',
@@ -46,6 +47,8 @@ const ru: Translations = {
     legal: 'Продолжая, вы соглашаетесь с\nУсловиями использования и Политикой конфиденциальности.',
   },
   tutorial: {
+    claim: 'Получить бесплатный участок',
+    claimed: 'Участок #{{number}} теперь ваш!',
     step: '{{step}}/{{total}}',
     s1Title: 'Ваш первый участок',
     s1Body: 'Начнём!\nЭто земельный участок. Нажмите, чтобы\nполучить бесплатную землю.',
@@ -57,12 +60,23 @@ const ru: Translations = {
     s4Body: 'Продавайте участки на рынке\nи покупайте землю у других игроков.',
   },
   map: {
+    zoomIn: 'Приблизьте карту, чтобы увидеть свободные участки',
+    myLocation: 'Моё местоположение',
     collect: 'Собрать',
     missions: 'Задания',
     market: 'Рынок',
     profile: 'Профиль',
   },
   plot: {
+    odds: 'Ваши шансы',
+    oddsHint: 'Редкость определяется при покупке. Редкие участки приносят больше.',
+    landmark: 'Рядом достопримечательность: шансы выше!',
+    revealTitle: 'Вам выпал',
+    free: 'Свободный участок',
+    nobody: 'Никто',
+    price: 'Цена',
+    buyFor: 'Купить за {{price}}',
+    notEnough: 'Недостаточно монет',
     owned: 'Ваш',
     baseIncome: 'Базовый доход',
     building: 'Здание',
@@ -75,6 +89,8 @@ const ru: Translations = {
     sell: 'Продать на рынке',
   },
   lands: {
+    empty: 'У тебя пока нет ни одного участка.',
+    goToMap: 'Найти землю на карте',
     title: 'Мои участки',
     count: '{{count}} участков',
     totalIncome: 'Общий доход',
@@ -164,6 +180,14 @@ const ru: Translations = {
     switchToLogin: 'Уже есть аккаунт? Войдите',
   },
   errors: {
+    plot_taken: 'Этот участок только что купил другой игрок.',
+    insufficient_funds: 'Недостаточно монет.',
+    starter_already_claimed: 'Вы уже получили бесплатный участок.',
+    no_free_plot_nearby: 'Рядом нет свободных участков. Попробуйте в другом месте.',
+    invalid_plot: 'Такого участка нет.',
+    area_too_large: 'Приблизьте карту, чтобы увидеть участки.',
+    unauthorized: 'Пожалуйста, войдите снова.',
+    invalid_refresh_token: 'Пожалуйста, войдите снова.',
     invalid_credentials: 'Неверный e-mail или пароль.',
     email_taken: 'Этот e-mail уже зарегистрирован.',
     name_taken: 'Это имя уже занято.',
